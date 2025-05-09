@@ -34,7 +34,7 @@ Automated Essay Scoring 2.0 数据集发布于 Kaggle 平台上，为解决自�
 
 \begin{table*}[htbp]
 \caption{AES2 数据集数据示例} \label{tab:AES2-example}
-\begin{tabular}{cp{13.3cm}c}
+\begin{tabular}{cp{12cm}c}
 \toprule
 \textbf{essay\_id} & \multicolumn{1}{c}{\textbf{原文}}  & \textbf{评分} \\ \midrule
 eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some of the people are just plain   stupid, and some have facts and details. I think that these so called aliens   are just Fallen Angels, because I read the Bible. These are simply just   natural lanforms. When you take a look at this structure it does look like   a humans face. Then again, I dont think it is an alien monument because, from   how far you look at it and how far they took pictures from it. I don't think   aliens could have made a face a couple miles long, it would have to take   years to do this. Anyhow, I do believe there was life on the planet, I know   there was water, because they have lots of craters, canyons, and   mountains. My conclusion is, they were formed by natural occurances. As in   the passage they compared the face to some features in the American West such   as, Middle Butte, and Snake River Plain of Idaho in the West. These   conlusions matched the face up to natural formation. The face formation is   known as a messa or a plataeu.  & 1  \\ \midrule
@@ -43,27 +43,19 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
 \end{tabular}
 \end{table*}
 
-在 AES2 数据集中，他们应用如下的评分标准来给学生写作短文打分，分数从低到高是 1 分（最低）到 6 分（最高）。与下面所描述的评分标准一样，每个分数之间的差距（例如 1-2 分、3-4 分、4-5 分）应尽可能相等。
+在 AES2 数据集中，他们应用如下的评分标准来给学生写作短文打分，分数从低到高是 1 分（最低）到 6 分（最高）。与下面所描述的评分标准一样，每个分数之间的差距（例如 1-2 分、3-4 分、4-5 分）应尽可能相等。具体评分准则如下：
 
-\begin{itemize}
-\item[\textbullet] 
 \textbf{6 分}：该类文章展现出清晰且稳定的高水平能力，尽管可能存在一些小错误。典型的文章能就议题有效且深刻地阐述观点，展现出卓越的批判性思维；文章能从原文中选取恰当的例子、理由及其他证据来支撑其观点；文章结构合理、重点突出，展现出清晰的连贯性和流畅的思路推进；文章语言运用娴熟，词汇丰富、准确、恰当，句子结构富有变化；文章在语法、用法和书写规范方面基本没有错误。
 
-\item[\textbullet] 
 \textbf{5 分}：该类文章展现出较为稳定的高水平能力，尽管偶尔会出现错误或质量上的小瑕疵。典型的文章能就议题有效阐述观点，展现出较强的批判性思维；文章通常能选用恰当的例子、理由及其他证据来支撑其观点；文章结构良好、重点明确，展现出连贯性和思路推进；文章语言运用熟练，词汇恰当，句子结构有变化；文章在语法、用法和书写规范方面基本没有错误。
 
-\item[\textbullet] 
 \textbf{4 分}：该类文章展现出足够的能力，尽管在质量上会有起伏。典型的文章能就议题阐述观点，展现出合格的批判性思维；文章能运用足够的例子、理由及其他证据来支撑其观点；文章大致结构合理、重点突出，展现出一定的连贯性和思路推进；文章语言运用能力有所波动，词汇基本恰当，句子结构有一定变化；文章可能存在一些语法、用法和书写规范方面的错误。
 
-\item[\textbullet] 
 \textbf{3 分}：该类文章展现出正在发展的能力，但存在以下一项或多项不足：能就议题阐述观点，有一定批判性思维，但可能表现不稳定，或使用的例子、理由及其他证据不足以支撑观点；文章在结构或重点方面存在局限，或在连贯性和思路推进上有不足；文章语言运用有一定能力，但有时词汇使用较弱、选词不当，和 / 或句子结构缺乏变化或存在问题；文章可能存在语法、用法和书写规范方面的错误累积。
 
-\item[\textbullet] 
 \textbf{2 分}：该类文章展现出的能力较弱，存在以下一项或多项缺陷：对议题的观点模糊或极为有限，批判性思维薄弱；文章提供的例子、理由及其他证据不恰当或不充分，无法支撑观点；文章结构混乱和 / 或重点不明确，或在连贯性和思路推进上存在严重问题；文章语言运用能力极低，词汇量极为有限、选词错误，和 / 或句子结构频繁出现问题；文章存在严重的语法、用法和书写规范错误，在一定程度上影响了意思表达。
 
-\item[\textbullet] 
 \textbf{1 分}：该类文章展现出的能力极低或几乎没有，存在以下一项或多项严重缺陷：无法就议题提出可行的观点，或几乎没有提供证据支撑观点；文章毫无条理、没有重点，导致内容不连贯、逻辑混乱；文章在词汇使用上存在根本性错误，和 / 或句子结构存在严重缺陷；文章存在大量语法、用法或书写规范错误，严重干扰了意思的表达。
-\end{itemize}
 
 \section{问题阐述}
 \label{sec:TOSWT-task}
@@ -87,7 +79,7 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
 通过上述步骤，我们能够系统地处理文本来源追踪的任务，将其转化为一个可操作的文本分类问题。这一方法论不仅为文本分类提供了清晰的框架，也为后续的研究和应用奠定了坚实的基础。
 
 
-\section{模型改写文本检测数据集构建方法}
+\section{模型改写文本检测数据集构建}
 \label{sec:TOSWT-gen}
 
 在 Learning Agency Lab 发布的 Automated Essay Scoring 2.0 (AES2) 数据集的基础上，TOSWT 数据集应运而生。AES2 数据集是一个用于自动写作评价的数据集，包含了 10,584 篇由 9-12 年级学生撰写的短文，并为每篇文章提供了 1-6 分的评分，其中高质量的文本将获得更高的评分。我们在 AES2 数据集的基础上，对原始数据进行了清洗，利用正则表达式替换非 ASCII 字符，并使用句子分割工具将短文划分为句子。此后，我们选用了一种 prompt 进行引导大语言模型改写处理后的短文。详细过程如图 \ref{fig:dataset-construct} 所示。
@@ -102,7 +94,10 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
 
 生成 TOSWT 数据集时使用 prompt 翻译表如表 \ref{tab:TOSWT-prompt} 所示。整体分成四个段落，第一段为任务的描述，二、三段则给出输入及输出的格式，最后第四段给予大语言模型输入的句子文本。
 
+这个 prompt 旨在帮助用户提升英语写作能力，具体通过将一篇英语文章进行润色与改进。它设定了用户作为英语教师和改进者的角色，引导用户逐句处理文本，以确保新生成的句子在意义上与原句一致。每个句子都被要求逐一润色，从而增强语言的流畅性和自然度。在执行过程中，用户将接收到一篇由多个已分割句子组成的文章。为了确保生成句子的数量与原句相等，prompt 设定了清晰的输出要求，用户只需专注于生成的新句子而无需担心格式问题。这种简洁的设计使用户能够更高效地进行文本修改。此外，prompt 提供了具体的格式示例，帮助用户理解所需的输出结构。这种结构化的指导不仅提高了工作效率，还确保了生成文本的规范性和一致性，进而为用户提供了系统的学习与实践体验。通过这种方式，用户能够在实际操作中获得更深刻的语言理解与应用能力。
+
 \begin{table*}[htbp]
+    \BITSetup{ misc / tabularFontSize = 6}
     \centering
     \caption{Prompt 中英文对照表} \label{tab:TOSWT-prompt}
     \begin{tabular}{@{}p{7.5cm} p{7.5cm}@{}}
@@ -128,8 +123,6 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
         \bottomrule
     \end{tabular}
 \end{table*}
-
-这个 prompt 旨在帮助用户提升英语写作能力，具体通过将一篇英语文章进行润色与改进。它设定了用户作为英语教师和改进者的角色，引导用户逐句处理文本，以确保新生成的句子在意义上与原句一致。每个句子都被要求逐一润色，从而增强语言的流畅性和自然度。在执行过程中，用户将接收到一篇由多个已分割句子组成的文章。为了确保生成句子的数量与原句相等，prompt 设定了清晰的输出要求，用户只需专注于生成的新句子而无需担心格式问题。这种简洁的设计使用户能够更高效地进行文本修改。此外，prompt 提供了具体的格式示例，帮助用户理解所需的输出结构。这种结构化的指导不仅提高了工作效率，还确保了生成文本的规范性和一致性，进而为用户提供了系统的学习与实践体验。通过这种方式，用户能够在实际操作中获得更深刻的语言理解与应用能力。
 
 \subsection{正则表达式替换非ASCII字符}
 \label{sec:TOSWT-gen-reg}
@@ -168,25 +161,20 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
 
 1. \textbf{输入验证}：首先，函数检查输入的文本是否为 None 或空字符串。如果是 None，会发出一个警告（SentenceSplitterWarning），并返回一个空列表。如果是空字符串，则直接返回空列表。这些检查确保了函数能够优雅地处理无效输入。
 
-2. \textbf{添加句子分隔符}：函数使用多个正则表达式（通过 regex.sub 函数）来识别句子的边界，并在适当的位置插入换行符（\textbackslash{}n）作为分隔符：
+2. \textbf{添加句子分隔符}：函数使用多个正则表达式（通过 regex.sub 函数）来识别句子的边界，并在适当的位置插入换行符（\textbackslash{}n）作为分隔符，具体插入规则包括以下四种情况：
+（1）非句号的句子结束标记（如 ? 或 !）后面跟随句子开头的标志（如大写字母）。
+（2）多重句号（如 ...）后面跟随句子开头的标志。
+（3）标点符号后紧跟引号或括号的情况。
+（4）句子结束标点后紧跟句子开头标志的情况。
 
-\begin{itemize}
-\item[\textbullet] 非句号的句子结束标记（如 ? 或 !）后面跟随句子开头的标志（如大写字母）。
-\item[\textbullet] 多重句号（如 ...）后面跟随句子开头的标志。
-\item[\textbullet] 标点符号后紧跟引号或括号的情况。
-\item[\textbullet] 句子结束标点后紧跟句子开头标志的情况。
-\item[\textbullet] 这些规则通过正则表达式的模式匹配来实现，确保了对复杂标点符号的处理。
-\end{itemize}
-
+这些规则通过正则表达式的模式匹配来实现，确保了对复杂标点符号的处理。
 
 3. \textbf{特殊标点处理}：在处理完主要的句子分隔符后，函数进一步处理特殊标点符号的情况。它将文本拆分为单词列表，并逐一检查每个单词是否符合特定的模式：
+（1）检查是否是已知的荣誉称谓（如 Dr. 或 Mr.），这些通常不会作为句子结束。
+（2）检查是否是大写字母缩写（如 U.S.A.），这些也不应被分割。
+（3）检查是否是数字相关的非分隔符情况。
 
-\begin{itemize}
-\item[\textbullet]检查是否是已知的荣誉称谓（如 Dr. 或 Mr.），这些通常不会作为句子结束。
-\item[\textbullet]检查是否是大写字母缩写（如 U.S.A.），这些也不应被分割。
-\item[\textbullet]检查是否是数字相关的非分隔符情况。
-\item[\textbullet]通过这些检查，函数能够避免错误地将某些标点符号识别为句子边界。
-\end{itemize}
+通过这些检查，函数能够避免错误地将某些标点符号识别为句子边界。
 
 4. \textbf{清理和返回结果}：在完成所有分隔符的插入后，函数会清理文本中的多余空格和换行符，确保输出的格式整洁。最后，它通过换行符（\textbackslash{}n）将文本分割成句子列表，并返回结果。
 
@@ -283,7 +271,7 @@ DeepSeek V3 的商业化与开源策略是其另一显著特色。其 API 定价
 
 新数据集中每篇短文的句子数、每篇散文的词元数以及每个句子的词元数如表 \ref{tab:TOSWT-length} 所示。第一行表示一篇短文中的句子个数，接下来分别是短文与句子的词元个数。50\% 表示的是中位数，其他以此类推。大语言模型的改写倾向于将文本长度改短，使之更加精炼。
 
-\begin{table*}[htbp]
+\begin{table*}[htb]
 \centering
 % TOSWT 数据集句子个数及 token 个数。
 

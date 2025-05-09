@@ -25,7 +25,7 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 \begin{figure}[htb]
 	\centering
 	\includegraphics[scale = 0.8]{figures/Transformer2}
-	\caption{Transformer 模型结构}
+	\caption{Transformer 模型结构 \cite{transformer}}
 	\label{fig:Transformer2}
 \end{figure}
 
@@ -50,7 +50,7 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[scale = 0.8]{figures/DotAtt}
-	\caption{缩放点积注意力}
+	\caption{缩放点积注意力 \cite{transformer}}
 	\label{fig:DotAtt}
 \end{figure}
 
@@ -60,10 +60,6 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 \label{eq3.1}
 \end{equation}
 
-在 Transformer 之前的研究中，加法注意力和点积注意力是最为常用的两种注意力机制。与 Transformer 的缩放点积注意力算法相比，点积注意力在计算上几乎没有区别，唯一的不同之处在于引入了比例因子 \(\frac{1}{\sqrt{d_k}}\)。加法注意力则采用具有单个隐藏层的前馈神经网络进行计算。尽管加法注意力和点积注意力在理论复杂性上相似，但由于点积注意力利用了可并行化且优化效果显著的矩阵乘法，因此在实际应用中，点积注意力的执行速度更快且更节省内存。
-
-当查询和键的维度 \(d_k\) 较小时，这两种机制的性能表现相似。然而，Transformer 原论文指出，当 \(d_k\) 较大时，矩阵相乘后产生的元素值会显著增大，导致经过 softmax 函数后的矩阵元素梯度减小，从而使得训练变得更加困难，结果也更难以获得。为了解决这一问题，我们引入了因子 \(\frac{1}{\sqrt{d_k}}\) 以缩小矩阵元素的值。
-
 （2） 多头注意力
 
 实际上，如果将键、值和查询统一设定为 \(d_{\text{model}}\) 维度，反而可能导致模型性能下降，相较于将查询、键和值分别投影至 \(d_k\)、\(d_k\) 和 \(d_v\) 维度进行不同的线性变换。在此基础上，注意力函数在每个查询、键和值的投影向量上并行执行，从而生成 \(d_v\) 维的输出值。随后，将这些 \(d_v\) 维的输出值进行连接，并再次进行线性投影，以生成最终输出。具体过程如图 \ref{fig:MultiheadAtt} 所示。
@@ -71,7 +67,7 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 \begin{figure}[htbp]
 	\centering
 	\includegraphics[scale = 0.8]{figures/MultiheadAtt}
-	\caption{多头注意力}
+	\caption{多头注意力 \cite{transformer}}
 	\label{fig:MultiheadAtt}
 \end{figure}
 
@@ -116,9 +112,7 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 \end{equation}
 其中 \(pos\) 表示位置，\(i\) 表示维度。换言之，位置编码的每个维度对应于一条正弦曲线，其波长形成从 \(2\pi\) 到 \(10000 \cdot 2\pi\) 的几何级数。选择这种函数的原因在于我们假设它能够使模型更容易地学习通过相对位置进行计算，因为对于任何固定的偏移量 \(k\)，\(\text{PE}_{pos+k}\) 可以表示为 \(\text{PE}_{pos}\) 的线性函数。
 
-使用这种通过公式固定计算的正弦版本的优势在于，它使得模型能够推断出比训练期间所遇到的序列长度更长的序列。
-
-\subsection{最终线性层}
+\subsection{线性层}
 
 在数据经过 log-softmax 函数处理后，将通过一层线性层将维度为 \(d_{\text{model}}\) 的向量转换为一个维度等于词汇表大小的向量，该向量用于表示对下一个预测词汇的概率分布。
 
@@ -133,10 +127,10 @@ BERT（Bidirectional Encoder Representations from Transformers）\cite{devlin_be
 
 BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Transformer 编码器的结构作为其核心架构。其总体结构如图 \ref{fig:BERT} 所示，多个 Transformer 编码器层逐层堆叠构成了 BERT 的整体框架。在原始论文中，作者分别构建了两种 BERT 模型，采用了 12 层和 24 层的 Transformer 编码器，分别对应于 110M 和 340M 的总参数量。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
 	\centering
-	\includegraphics[scale = 0.7]{figures/bert.png}
-	\caption{BERT 架构图}
+	\includegraphics[scale = 0.5]{figures/bert.png}
+	\caption{BERT 架构图 \cite{devlin_bert_2019}}
 	\label{fig:BERT}
 \end{figure}
 
@@ -146,10 +140,10 @@ BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Tran
 
 在 BERT 中，采用了具有 30,000 个词元的 WordPiece 嵌入机制。每个序列的首个标记始终是一个特殊的分类标记（[CLS]），其对应的最终隐藏状态被用作分类任务的聚合序列表示。该标记的最终向量可视为整句话的语义表示，进而用于下游的分类任务等。由于该标记本身缺乏明显的语义信息，它能够更“公平”地整合文本中各个词的语义，从而更好地表征整句话的含义。具体而言，self-attention 机制通过文本中的其他词增强目标词的语义表示，尽管目标词自身的语义仍占主导地位。因此，在经过 BERT 的 12 层（以 BERT-base 为例）处理后，每个词的嵌入融合了所有词的信息，从而更准确地反映其语义。在 BERT 的执行过程中，句子对被打包为一个单一的序列。在这种情况下，有两种方式用于区分句子。首先，通过一个特殊标记（[SEP]）将它们分开。其次，BERT 会将学习到的嵌入添加到每个词元中，以指示其属于句子 A 还是句子 B。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
 	\centering
-	\includegraphics[width=\linewidth]{figures/bert_Input_Embeddings.jpg}
-	\caption{BERT 嵌入（Embedding）示意图}
+	\includegraphics[width=0.9\linewidth]{figures/bert_Input_Embeddings.jpg}
+	\caption{BERT 嵌入（Embedding）示意图 \cite{devlin_bert_2019}}
 	\label{fig:BERT-embedding}
 \end{figure}
 
@@ -159,16 +153,16 @@ BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Tran
 
 BERT 研究的主要贡献在于其二阶段训练过程的有效推广，该过程分为预训练（pretraining）和微调（finetuning）两个阶段，训练流程的示意图如图 \ref{fig:BERT-OverAll} 所示。在预训练阶段，BERT 通过大规模的无标注文本数据学习语言的深层次表示，采用了带掩码的语言模型（Masked Language Model, MLM）和下一句预测（Next Sentence Prediction, NSP）两种任务，从而使模型能够理解上下文的双向信息。在微调阶段，BERT 通过在少量标注数据上进行训练，能够针对特定任务进行调整，进而高效适应多种自然语言处理任务，如文本分类、问答系统和命名实体识别等。
 
-\begin{figure}[htbp]
+\begin{figure}[htb]
 	\centering
-	\includegraphics[width=\linewidth]{figures/BERT_Overall.jpg}
-	\caption{BERT 训练过程示意图}
+	\includegraphics[width=0.9\linewidth]{figures/BERT_Overall.jpg}
+	\caption{BERT 训练过程示意图 \cite{devlin_bert_2019}}
 	\label{fig:BERT-OverAll}
 \end{figure}
 
 这种预训练-微调的二阶段训练范式显著提高了模型在多种自然语言处理（NLP）任务上的性能，标志着该领域的一次重要变革。BERT 的成功激励了大量基于 Transformer 架构的预训练模型的后续研发，例如本文将使用的 RoBERTa 和 DeBERTa，以及其他在 BERT 模型基础上进行改进的模型。这些模型在不同任务中展现出更高的效率和准确性。通过这些创新，BERT 不仅推动了学术界对预训练模型的深入研究，也促进了工业界在实际应用中的广泛采用。
 
-\section{AI 生成文本探测技术}
+\section{AI 生成文本检测技术}
 \label{sec:llmdetect}
 
 大型语言模型（LLMs）的迅速发展促使对检测 AI 生成文本的方法进行深入研究。在 ChatGPT 发布之前，GLTR \cite{gehrmann_gltr_2019} 作为一种文本检测工具，通过一系列统计分析技术识别由不同采样策略生成的文本特征。GLTR 有效地将人类对生成文本的检测准确率从 54\% 提升至 72\%，彰显了其在帮助非专业人士区分人类与机器生成内容方面的实用性。
