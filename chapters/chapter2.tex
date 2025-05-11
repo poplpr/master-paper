@@ -20,7 +20,7 @@
 
 在当前自然语言处理领域，主流的大语言模型普遍基于 Transformer 框架 \cite{transformer}。自2017年提出以来，该架构因其卓越的并行处理能力和对长距离依赖的建模能力而迅速成为研究的热点。Transformer 通过自注意力机制有效地捕捉输入序列中各部分之间的关系，从而显著提升了在处理大规模文本数据时的训练效率和表达能力。诸如 BERT 和 GPT 系列等知名模型均依托该框架，在多种语言任务中展现出卓越的性能。因此，深入探讨 Transformer 的结构与原理，不仅有助于理解当前大语言模型成功的原因，也为未来研究奠定了重要的理论基础。
 
-Transformer 是 Google 于2017年提出的一种基于自注意力机制的神经网络模型，专为处理序列到序列（Seq2Seq）任务而设计，广泛应用于各种自然语言处理任务。该模型利用自注意力机制来处理输入序列中的关联性，能够有效捕捉长距离依赖关系，而无需依赖循环神经网络或卷积神经网络。此外，Transformer 可以并行处理输入序列中的不同位置，因此在训练和推理过程中，特别是在处理长序列时，展现出更高的效率。
+Google 公司于2017年提出的一种神经网络模型 Transformer，专为处理序列到序列（Seq2Seq）任务而设计，广泛应用于各种自然语言处理任务。该模型利用自注意力机制来处理输入序列中的关联性，能够有效捕捉长距离依赖关系，而无需依赖循环神经网络或卷积神经网络。此外，Transformer 可以并行处理输入序列中的不同位置，因此在训练和推理过程中，特别是在处理长序列时，展现出更高的效率。
 
 \begin{figure}[htb]
 	\centering
@@ -33,95 +33,95 @@ Transformer 是 Google 于2017年提出的一种基于自注意力机制的神�
 
 （1） 编码器
 
-编码器由 \(N=6\) 个相同的 TransformerEncoderLayer 层构成。每个 TransformerEncoderLayer 层可分为两个子层。第一个子层实现了多头自注意力机制，而第二个子层则是一个简单的全连接前馈网络。每个子层后均接有残差连接，随后对经过残差连接的输出进行层归一化。简而言之，每个子层的输出向量可表示为 \(\text{LayerNormal}(x + \text{Sublayer}(x))\)，其中 \(\text{Sublayer}(x)\) 表示该子层所实现的功能。为了确保残差连接的维度相等并便于计算，模型中所有子层及嵌入层的输出向量均设定为 \(d_{\text{model}} = 512\)。
+编码器由 \(N=6\) 个相同的 TransformerEncoderLayer 层构成。每个 TransformerEncoderLayer 层可以再细分为两个子层。在这两个子层中，第一个子层实现了多头自注意力机制，而第二个子层则是一个简单的全连接前馈网络。每个子层后均接有残差连接，随后对经过残差连接的输出进行层归一化。为了确保残差连接的维度相等并便于计算，模型中所有子层及嵌入层的输出向量均设定为 \(d_{\text{model}} = 512\)。
 
 （2） 解码器
 
-解码器同样由 \(N=6\) 个相同的 TransformerDecoderLayer 层组成。每个 TransformerDecoderLayer 层包含三个子层。其中两个子层的结构与编码器层中的子层大致相似，而第三个子层则接收编码器堆栈的输出及解码器层前一个多头注意力子层的输出，并在该子层内执行多头注意力操作。与编码器层的子层结构相似，解码器层的每个子层后也接有残差连接，随后对经过残差连接的输出进行层归一化。此外，本研究对解码器结构中的自注意力子层进行了修改，加入了位置掩码，以防止从前面某个位置获取后面位置的信息。此位置掩码结合位置偏移的设计，确保序列中位置 \(i\) 的元素的预测仅能基于序列中小于 \(i\) 的所有内容。
+解码器同样由 \(N=6\) 个相同的 TransformerDecoderLayer 层组成。每个 TransformerDecoderLayer 层包含三个子层。编码器层中的子层与在解码器其中两个子层的结构大致相似。但是在解码器层中，第三个子层需要获取编码器的输出及解码器层前一个子层的输出，并在该子层内执行多头注意力操作。与编码器层的子层结构相似，解码器层的每个子层后也接有残差连接，随后对经过残差连接的输出向量进行层归一化。Transformer 也将修改放入解码器结构中的自注意力子层中，加入了位置掩码，以防止从前面某个位置获取后面位置的信息。此位置掩码结合位置偏移的设计，确保序列中位置 \(i\) 的元素的预测仅能基于序列中小于 \(i\) 的所有内容。
 
-\subsection{注意力机制}
+% \subsection{注意力机制}
 
-在 Transformer 中，定义注意力函数为输入为查询和一组键值，然后进行输出的函数，在此之中查询（Query, Q）、键（Key, K）、值（Value, V）和输出都是向量。在注意力函数中，简单地讲，输出实质上是值的加权和。此其中对于每个值的权重由权重相应的键以及查询计算得出。
+% 在 Transformer 中，定义注意力函数为输入为查询和一组键值，然后进行输出的函数，在此之中查询（Query, Q）、键（Key, K）、值（Value, V）和输出都是向量。在注意力函数中，简单地讲，输出实质上是值的加权和。此其中对于每个值的权重由权重相应的键以及查询计算得出。
 
-（1） 缩放点积注意力
+% （1） 缩放点积注意力
 
-在 Transformer 论文中所采用的注意力机制为缩放点积注意力。该机制的输入由查询、键和值组成，其中查询和键的维度均为 \(d_k\)，而值的维度为 \(d_v\)。在缩放点积注意力中，我们首先计算查询与所有键向量之间的点积，并随后将这些结果除以 \(\sqrt{d_k}\)。接着，通过 softmax 函数对这些归一化后的向量进行处理，以计算每个值的权重。具体的过程如图 \ref{fig:DotAtt} 所示。
+% 在 Transformer 论文中所采用的注意力机制为缩放点积注意力。该机制的输入由查询、键和值组成，其中查询和键的维度均为 \(d_k\)，而值的维度为 \(d_v\)。在缩放点积注意力中，我们首先计算查询与所有键向量之间的点积，并随后将这些结果除以 \(\sqrt{d_k}\)。接着，通过 softmax 函数对这些归一化后的向量进行处理，以计算每个值的权重。具体的过程如图 \ref{fig:DotAtt} 所示。
 
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[scale = 0.8]{figures/DotAtt}
-	\caption{缩放点积注意力 \cite{transformer}}
-	\label{fig:DotAtt}
-\end{figure}
+% \begin{figure}[htbp]
+% 	\centering
+% 	\includegraphics[scale = 0.8]{figures/DotAtt}
+% 	\caption{缩放点积注意力 \cite{transformer}}
+% 	\label{fig:DotAtt}
+% \end{figure}
 
-在实际应用中，对于一组待处理的注意力查询，应将这些查询同时进行计算，并将其封装为一个矩阵 \(Q\)。类似地，键和值也被封装为矩阵 \(K\) 和 \(V\)。通过这种方式，计算过程可以通过矩阵乘法进行优化。因此，注意力函数的输出矩阵可以表示为：
-\begin{equation}
-\text{Attention}(Q,K,V) = \text{softmax}(\frac{QK^T}{\sqrt{d_k}})V
-\label{eq3.1}
-\end{equation}
+% 在实际应用中，对于一组待处理的注意力查询，应将这些查询同时进行计算，并将其封装为一个矩阵 \(Q\)。类似地，键和值也被封装为矩阵 \(K\) 和 \(V\)。通过这种方式，计算过程可以通过矩阵乘法进行优化。因此，注意力函数的输出矩阵可以表示为：
+% \begin{equation}
+% \text{Attention}(Q,K,V) = \text{softmax}(\frac{QK^T}{\sqrt{d_k}})V
+% \label{eq3.1}
+% \end{equation}
 
-（2） 多头注意力
+% （2） 多头注意力
 
-实际上，如果将键、值和查询统一设定为 \(d_{\text{model}}\) 维度，反而可能导致模型性能下降，相较于将查询、键和值分别投影至 \(d_k\)、\(d_k\) 和 \(d_v\) 维度进行不同的线性变换。在此基础上，注意力函数在每个查询、键和值的投影向量上并行执行，从而生成 \(d_v\) 维的输出值。随后，将这些 \(d_v\) 维的输出值进行连接，并再次进行线性投影，以生成最终输出。具体过程如图 \ref{fig:MultiheadAtt} 所示。
+% 实际上，如果将键、值和查询统一设定为 \(d_{\text{model}}\) 维度，反而可能导致模型性能下降，相较于将查询、键和值分别投影至 \(d_k\)、\(d_k\) 和 \(d_v\) 维度进行不同的线性变换。在此基础上，注意力函数在每个查询、键和值的投影向量上并行执行，从而生成 \(d_v\) 维的输出值。随后，将这些 \(d_v\) 维的输出值进行连接，并再次进行线性投影，以生成最终输出。具体过程如图 \ref{fig:MultiheadAtt} 所示。
 
-\begin{figure}[htbp]
-	\centering
-	\includegraphics[scale = 0.8]{figures/MultiheadAtt}
-	\caption{多头注意力 \cite{transformer}}
-	\label{fig:MultiheadAtt}
-\end{figure}
+% \begin{figure}[htbp]
+% 	\centering
+% 	\includegraphics[scale = 0.8]{figures/MultiheadAtt}
+% 	\caption{多头注意力 \cite{transformer}}
+% 	\label{fig:MultiheadAtt}
+% \end{figure}
 
-多头注意力的主要优势在于其能够同时关注来自不同位置的信息。相较之下，单一注意力头的使用会导致信息的平均化，从而抑制这一特性。
-\begin{equation}
-\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, ..., \text{head}_h)W^O
-\label{eq3.2}
-\end{equation}
-\begin{equation}
-\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)
-\label{eq3.3}
-\end{equation}
-在上述公式中，投影操作涉及的参数矩阵包括 \(W_i^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(W_i^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(W_i^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 以及 \(W^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}\)。
+% 多头注意力的主要优势在于其能够同时关注来自不同位置的信息。相较之下，单一注意力头的使用会导致信息的平均化，从而抑制这一特性。
+% \begin{equation}
+% \text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, ..., \text{head}_h)W^O
+% \label{eq3.2}
+% \end{equation}
+% \begin{equation}
+% \text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)
+% \label{eq3.3}
+% \end{equation}
+% 在上述公式中，投影操作涉及的参数矩阵包括 \(W_i^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(W_i^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(W_i^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 以及 \(W^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}\)。
 
-在 Transformer 架构中，采用了 \(h = 8\) 个并行的注意力层或头。对于每个注意力头，设定其维度为 \(d_k = d_v = d_{\text{model}} / h = 64\)。由于每个头的维度被缩减，因此整体计算成本与具有全维度的单头注意力相当。
+% 在 Transformer 架构中，采用了 \(h = 8\) 个并行的注意力层或头。对于每个注意力头，设定其维度为 \(d_k = d_v = d_{\text{model}} / h = 64\)。由于每个头的维度被缩减，因此整体计算成本与具有全维度的单头注意力相当。
 
-\subsection{位置前馈网络}
+% \subsection{位置前馈网络}
 
-除了注意力子层外，编码器和解码器的每一层均包含一个全连接的前馈网络，该网络在每个位置上均以相同方式应用。该网络包括两个线性变换，并在其间引入一个线性整流单元（ReLU）激活函数。具体表达式为：
-\begin{equation}
-\text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
-\label{eq3.4}
-\end{equation}
+% 除了注意力子层外，编码器和解码器的每一层均包含一个全连接的前馈网络，该网络在每个位置上均以相同方式应用。该网络包括两个线性变换，并在其间引入一个线性整流单元（ReLU）激活函数。具体表达式为：
+% \begin{equation}
+% \text{FFN}(x) = \max(0, xW_1 + b_1)W_2 + b_2
+% \label{eq3.4}
+% \end{equation}
 
-尽管在不同位置上应用的线性变换相同，但在层与层之间所使用的参数却是各异的。可以将其视作两个内核大小为 \(1\) 的卷积操作。输入和输出的维度均为 \(d_{\text{model}} = 512\)，而内部层的维度为 \(d_{ff} = 2048\)。
+% 尽管在不同位置上应用的线性变换相同，但在层与层之间所使用的参数却是各异的。可以将其视作两个内核大小为 \(1\) 的卷积操作。输入和输出的维度均为 \(d_{\text{model}} = 512\)，而内部层的维度为 \(d_{ff} = 2048\)。
 
-\subsection{嵌入层与 Softmax 函数}
+% \subsection{嵌入层与 Softmax 函数}
 
-与其他序列转换模型相似，Transformer 采用学习嵌入技术，将输入序列和输出序列中的词汇映射为维度为 \(d_{\text{model}}\) 的向量。此外，模型还利用常规的学习线性变换及 Softmax 函数，将解码器的输出转化为对下一个词汇的预测概率。在我们的模型中，两个嵌入层与预 Softmax 线性变换之间共享相同的权重矩阵。在嵌入层中，这些权重会乘以因子 \(\sqrt{d_{\text{model}}}\)。此外，也存在将 log-softmax 函数替代 Softmax 函数的做法。
+% 与其他序列转换模型相似，Transformer 采用学习嵌入技术，将输入序列和输出序列中的词汇映射为维度为 \(d_{\text{model}}\) 的向量。此外，模型还利用常规的学习线性变换及 Softmax 函数，将解码器的输出转化为对下一个词汇的预测概率。在我们的模型中，两个嵌入层与预 Softmax 线性变换之间共享相同的权重矩阵。在嵌入层中，这些权重会乘以因子 \(\sqrt{d_{\text{model}}}\)。此外，也存在将 log-softmax 函数替代 Softmax 函数的做法。
 
-\subsection{位置编码}
+% \subsection{位置编码}
 
-由于 Transformer 模型不采用递归或卷积结构，为了使模型能够有效利用序列的顺序信息，必须引入某种形式的标记在序列中相对或绝对位置的信息。因此，我们在编码器和解码器堆栈的输入嵌入中添加了“位置编码”。位置编码的维度与嵌入相同，即 \(d_{\text{model}}\)，从而可以将两者直接相加。位置编码的形式多种多样，既可以通过模型学习得到，也可以通过预定义的公式计算得出。
+% 由于 Transformer 模型不采用递归或卷积结构，为了使模型能够有效利用序列的顺序信息，必须引入某种形式的标记在序列中相对或绝对位置的信息。因此，我们在编码器和解码器堆栈的输入嵌入中添加了“位置编码”。位置编码的维度与嵌入相同，即 \(d_{\text{model}}\)，从而可以将两者直接相加。位置编码的形式多种多样，既可以通过模型学习得到，也可以通过预定义的公式计算得出。
 
-在 Transformer 中，采用了不同频率的正弦和余弦函数来生成位置编码，具体表达式为：
-\begin{equation}
-\begin{aligned}
-\text{PE}(pos,2i) &= \sin \left ( \frac{pos}{10000^{2i/d_{\text{model}}}} \right ) \\
-\text{PE}(pos,2i+1) &= \cos \left ( \frac{pos}{10000^{2i/d_{\text{model}}}} \right )
-\end{aligned}
-\label{eq3.5}
-\end{equation}
-其中 \(pos\) 表示位置，\(i\) 表示维度。换言之，位置编码的每个维度对应于一条正弦曲线，其波长形成从 \(2\pi\) 到 \(10000 \cdot 2\pi\) 的几何级数。选择这种函数的原因在于我们假设它能够使模型更容易地学习通过相对位置进行计算，因为对于任何固定的偏移量 \(k\)，\(\text{PE}_{pos+k}\) 可以表示为 \(\text{PE}_{pos}\) 的线性函数。
+% 在 Transformer 中，采用了不同频率的正弦和余弦函数来生成位置编码，具体表达式为：
+% \begin{equation}
+% \begin{aligned}
+% \text{PE}(pos,2i) &= \sin \left ( \frac{pos}{10000^{2i/d_{\text{model}}}} \right ) \\
+% \text{PE}(pos,2i+1) &= \cos \left ( \frac{pos}{10000^{2i/d_{\text{model}}}} \right )
+% \end{aligned}
+% \label{eq3.5}
+% \end{equation}
+% 其中 \(pos\) 表示位置，\(i\) 表示维度。换言之，位置编码的每个维度对应于一条正弦曲线，其波长形成从 \(2\pi\) 到 \(10000 \cdot 2\pi\) 的几何级数。选择这种函数的原因在于我们假设它能够使模型更容易地学习通过相对位置进行计算，因为对于任何固定的偏移量 \(k\)，\(\text{PE}_{pos+k}\) 可以表示为 \(\text{PE}_{pos}\) 的线性函数。
 
-\subsection{线性层}
+% \subsection{线性层}
 
-在数据经过 log-softmax 函数处理后，将通过一层线性层将维度为 \(d_{\text{model}}\) 的向量转换为一个维度等于词汇表大小的向量，该向量用于表示对下一个预测词汇的概率分布。
+% 在数据经过 log-softmax 函数处理后，将通过一层线性层将维度为 \(d_{\text{model}}\) 的向量转换为一个维度等于词汇表大小的向量，该向量用于表示对下一个预测词汇的概率分布。
 
 \section{预训练语言模型技术}
 
-近年来，自然语言处理（Natural Language Processing, NLP）领域经历了显著的进展，其中预训练语言模型（Pre-trained Language Models, PLMs）的研究为该领域的发展提供了重要支持。预训练语言模型的核心思想是首先在大规模数据集上对深度神经网络进行预训练，以获得模型参数，随后利用这些经过训练的模型来执行多种具体的下游任务，从而避免从零开始训练模型并减少对标注数据的依赖。与预训练语言模型相关的早期研究可以追溯到 NNLM \cite{NNLM} 和 word2Vec \cite{mikolov2013efficientestimationwordrepresentations}。2017 年，Vaswani 等人 \cite{transformer} 提出了 Transformer 架构，这一架构的引入显著提升了多种 NLP 任务的性能，使 Transformer 成为众多预训练语言模型的基础。在基于 Transformer 的编码器架构中，Radford 等人 \cite{gpt} 提出了 GPT 模型，该模型真正实现了预训练-微调的框架，避免了将词嵌入从模型中提取的过程，而是直接在下游任务中对预训练模型进行微调。不同的任务可以采用不同的输入或对输出层进行调整，使下游任务更紧密地结合上游的预训练模型。目前，GPT 模型的应用取得了显著成功，各种大型 GPT 模型层出不穷，为 NLP 等领域注入了新的活力。同时，Devlin 等人 \cite{devlin_bert_2019} 基于 Transformer 的编码器提出了 BERT 模型，成为目前 NLP 中应用最广泛的预训练模型之一。BERT 采用了一种掩码语言模型（Masked Language Model, MLM）的方法，通过随机掩盖输入文本中的某些词元，并利用上下文信息进行预测，从而实现对数据语义关系的提取。继 GPT 和 BERT 之后，研究人员还提出了 XLNet \cite{XLNet}、RoBERTa \cite{liu_roberta_2019}、DeBERTa \cite{he_deberta_2021}、ERNIE \cite{sun2019ernieenhancedrepresentationknowledge}、T5 \cite{T5} 和 BART \cite{lewis-etal-2020-bart} 等多种预训练语言模型。本节将介绍本文所采用的 RoBERTa 和 DeBERTa 模型的基础预训练语言模型 BERT。
+近年来，自然语言处理（Natural Language Processing, NLP）领域经历了显著的进展，其中预训练语言模型（Pre-trained Language Models, PLMs）的研究为该领域的发展提供了重要支持。预训练语言模型的核心思想是首先在进行预训练阶段的训练，基于大规模数据集的训练以获得模型参数，此举可使模型获得对于数据初步的认知，随后利用这些经过训练的模型来在具体的下游任务数据上进行微调。预训练语言模型的早期研究甚至可以追溯到 NNLM \cite{NNLM} 和 word2Vec \cite{mikolov2013efficientestimationwordrepresentations}。2017 年，Vaswani 等人 \cite{transformer} 提出了 Transformer 架构，这一架构的引入显著提升了多种 NLP 任务的性能，使 Transformer 成为众多预训练语言模型的基础。在基于 Transformer 的编码器架构中，Radford 等人 \cite{gpt} 提出了 GPT 模型，该模型真正实现了预训练-微调的框架，避免了将词嵌入从模型中提取的过程。目前，GPT 模型的应用取得了显著成功，各种大型 GPT 模型层出不穷，为 NLP 等领域注入了新的活力。同时，Devlin 等人 \cite{devlin_bert_2019} 基于 Transformer 的编码器提出了 BERT 模型，成为目前自然语言处理领域中应用最广泛的模型之一。BERT 在预训练阶段，采用了掩码语言模型（Masked Language Model, MLM）的方法。这种方法是从输入文本中通过随机掩盖某些词元，此后利用除了被掩盖词元外的上下文信息进行预测，从而实现对模型的训练。继 GPT 和 BERT 之后，研究人员还提出了 XLNet \cite{XLNet}、RoBERTa \cite{liu_roberta_2019}、DeBERTa \cite{he_deberta_2021}、ERNIE \cite{sun2019ernieenhancedrepresentationknowledge}、T5 \cite{T5} 和 BART \cite{lewis-etal-2020-bart} 等多种预训练语言模型。本节将介绍本文所采用的 RoBERTa 和 DeBERTa 模型的基础预训练语言模型 BERT 模型。
 
 % 写写 BERT 吧
-BERT（Bidirectional Encoder Representations from Transformers）\cite{devlin_bert_2019} 是由 Google AI 研究院于 2018 年 10 月提出的一种预训练模型。该模型在机器阅读理解的顶级基准测试 SQuAD1.1 \cite{rajpurkar2016squad100000questionsmachine} 中展现了卓越的性能：在所有两个评估指标上均显著超越了人类表现，并在 11 项不同的 NLP 测试中创造了最新的状态-of-the-art（SOTA）成绩。其中，GLUE 基准 \cite{wang2019gluemultitaskbenchmarkanalysis} 的得分提升至 80.4\%（绝对改进 7.6\%），而 MultiNLI 数据集 \cite{williams2018broadcoveragechallengecorpussentencemultinli} 的准确率达到 86.7\%（绝对改进 5.6\%），标志着这一模型在自然语言处理领域的里程碑式成就。BERT 在 Transformer 架构的基础上引入了预训练与微调的策略，使得模型能够在预训练阶段学习通用的语言表示，并在特定任务中进行微调，从而显著提高了模型的适应性与性能。因此，尽管 BERT 并非首个预训练模型，但在预训练模型的发展历程中，其重要性不容忽视，具有里程碑式的意义。
+BERT（Bidirectional Encoder Representations from Transformers）\cite{devlin_bert_2019} 是由 Google 提出的预训练模型。该模型在机器阅读理解的顶级基准测试 SQuAD1.1 \cite{rajpurkar2016squad100000questionsmachine} 中展现了卓越的性能：在所有两个评估指标上均显著超越了人类表现，并在 11 项不同的 NLP 测试中创造了最新的状态-of-the-art（SOTA）成绩。其中，GLUE 基准 \cite{wang2019gluemultitaskbenchmarkanalysis} 的得分提升至 80.4\%（绝对改进 7.6\%），而 MultiNLI 数据集 \cite{williams2018broadcoveragechallengecorpussentencemultinli} 的准确率达到 86.7\%（绝对改进 5.6\%），标志着这一模型在自然语言处理领域的里程碑式成就。BERT 在 Transformer 架构的基础上引入了预训练与微调的策略，使得模型能够在预训练阶段学习通用的语言表示，并在特定任务中进行微调，从而显著提高了模型的适应性与性能。因此，尽管 BERT 并非首个预训练模型，但在预训练模型的发展历程中，其重要性不容忽视，具有里程碑式的意义。
 
 \subsection{BERT 结构}
 
@@ -136,9 +136,9 @@ BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Tran
 
 \subsubsection{嵌入}
 
-对于 BERT 而言，其在嵌入（Embedding）方面的显著改进是一个关键创新。为了使 BERT 能够有效处理多种下游任务，其输入表示能够清晰地区分单个句子和句子对（例如，〈问题, 答案〉）在同一词元序列中。在本研究中，“句子”可以被理解为任意跨度的连续文本，而非严格意义上的自然语言句子。“序列”则是指输入到 BERT 的词元序列，这可以是单个句子，也可以是多个句子组合而成。
+对于 BERT 而言，其在嵌入（Embedding）方面的显著改进是一个关键创新。为了使 BERT 能够有效处理多种下游任务，其输入表示能够清晰地区分单个句子和句子对（例如，〈问题, 答案〉）在同一词元序列中。
 
-在 BERT 中，采用了具有 30,000 个词元的 WordPiece 嵌入机制。每个序列的首个标记始终是一个特殊的分类标记（[CLS]），其对应的最终隐藏状态被用作分类任务的聚合序列表示。该标记的最终向量可视为整句话的语义表示，进而用于下游的分类任务等。由于该标记本身缺乏明显的语义信息，它能够更“公平”地整合文本中各个词的语义，从而更好地表征整句话的含义。具体而言，self-attention 机制通过文本中的其他词增强目标词的语义表示，尽管目标词自身的语义仍占主导地位。因此，在经过 BERT 的 12 层（以 BERT-base 为例）处理后，每个词的嵌入融合了所有词的信息，从而更准确地反映其语义。在 BERT 的执行过程中，句子对被打包为一个单一的序列。在这种情况下，有两种方式用于区分句子。首先，通过一个特殊标记（[SEP]）将它们分开。其次，BERT 会将学习到的嵌入添加到每个词元中，以指示其属于句子 A 还是句子 B。
+在 BERT 中，每个序列的首个词元始终是一个特殊的非正文的分类词元（[CLS]），该标记的最终向量可视为整句话的语义表示，进而用于下游的分类任务等。由于该标记本身并非正文内容，因此缺乏明显的语义信息，使用它的最终向量能恰好地在文本中整合各个词的语义。在经过 BERT 这一预训练语言模型的处理后，所有词的信息同时也被融合进入了每个词的嵌入中，从而更准确地反映其语义。在 BERT 的执行过程中，句子对会被合并成一个序列然后由 BERT 模型处理。区分句子大致分为两步。首先，在原始输入文本中加入特殊标记（[SEP]）分开两个句子。其次，BERT 将句子嵌入融合到每个词元生成的向量中，以表明其为哪个句子。
 
 \begin{figure}[htb]
 	\centering
@@ -214,7 +214,7 @@ DeBERTa 模型 \cite{he_deberta_2021} 是预训练语言模型演进过程中的
 
 换言之，单词对之间的注意力权重可以通过将基于其内容和位置的解耦矩阵应用于四个注意力分数的求和来计算。这四个分数分别对应于内容对内容、内容对位置、位置对内容以及位置对位置的注意力。
 
-在 DeBERTa 之前，相对位置编码的方法在计算注意力权重时，通常依赖于独立的嵌入矩阵来确定相对位置偏差 \cite{Shaw2018SelfAttentionWR, Huang2018MusicTG}。这相当于仅利用公式 \ref{eq:deberta-attention} 中的内容对内容和内容对位置项来进行注意力权重的计算。DeBERTa 模型则认为位置对内容的项同样具有重要性，因为单词对的注意力权重不仅依赖于其内容信息，还受到相对位置的影响。只有同时考虑内容对位置和位置对内容的项，才能对这种关系进行全面建模。鉴于 DeBERTa 使用了相对位置嵌入，因此位置对位置的项在我们的实现中被认为提供的额外信息有限，因此从公式 \ref{eq:deberta-attention} 中去除了该项。
+在 DeBERTa 之前，相对位置编码的方法在计算注意力权重时，通常依赖于独立的嵌入矩阵来确定相对位置偏差 \cite{Shaw2018SelfAttentionWR, Huang2018MusicTG}。这相当于仅利用公式 \ref{eq:deberta-attention} 中的内容对内容和内容对位置这两项计算注意力权重。因为单词对的注意力权重不仅依赖于其内容信息，还受到相对位置的影响，因此位置对内容的项同样十分重要。由于在 DeBERTa 中处理位置的方式是相对位置嵌入，因此位置对位置的该项在 DeBERTa 的中被认为提供的额外信息有限，因此从公式 \ref{eq:deberta-attention} 中去除了该项。
 
 以单头注意力为例，标准的自注意力操作 \cite{transformer} 可以表示为：
 \begin{align}
@@ -290,9 +290,7 @@ DeBERTa 采用了一种高效的实现方法。在其之前的研究中，对于
 
 在 DeBERTa 中，预训练阶段将最大相对距离 \(k\) 设置为 512。解耦的注意力权重可以通过算法 \ref{algo:DA} 高效计算。设 \(\delta\) 为根据公式 \ref{eq:deberta-distance} 得到的相对位置矩阵，其中 \(\delta[i, j] = \delta(i, j)\)。在此过程中，我们并不为每个查询分配独立的相对位置嵌入矩阵，而是通过将每个查询向量 \(\mathbf{Q}_{c}[i, :]\) 乘以 \(\mathbf{K}_{r}^{\intercal} \in \mathbb{R}^{d \times 2k}\)（如算法 \ref{algo:DA} 的第 3-5 行），并利用相对位置矩阵 \(\delta\) 作为索引来提取注意力权重（如算法 \ref{algo:DA} 的第 6-10 行）。为了计算位置对内容的注意力分数，我们通过将每个键向量 \(\mathbf{K}_{c}[j, :]\) 乘以 \(\mathbf{Q}_{r}^{T}\) 来获得注意力矩阵 \(\tilde{\mathbf{A}}_{p \to c}[:, j]\) 的列向量（如算法 \ref{eq:deberta-distance} 的第 11-13 行），并最终通过相对位置矩阵 \(\delta\) 作为索引提取相应的注意力分数（如算法 \ref{algo:DA} 的第 14-18 行）。通过这种方法，我们避免了为每个查询分配内存以存储相对位置嵌入，从而将空间复杂度降低至 \(O(kd)\)，仅需存储 \(\mathbf{K}_{r}\) 和 \(\mathbf{Q}_{r}\)。
 
-此外，DeBERTa 还采用了掩码语言建模（Masked Language Modeling, MLM）作为预训练策略。在这一过程中，模型通过利用周围未被掩码的词汇来预测被掩码的词。DeBERTa 在 MLM 任务中充分考虑了上下文词的内容及其位置信息。尽管解耦注意力机制已经整合了上下文词的内容和相对位置，但它并未充分考虑这些词的绝对位置，而在许多情况下，绝对位置对于准确预测至关重要。
-
-以句子“a new store opened beside the new mall”为例，若将“store”和“mall”进行掩码以进行预测，仅依赖局部上下文（如相对位置和周边词汇）可能使模型难以区分句中的“store”和“mall”，因为这两个词相对于“new”的相对位置是相同的。为了解决这一局限性，模型需要将绝对位置作为补充信息纳入考虑。例如，在该句中，主语是“store”而非“mall”，这种句法上的细微差别在很大程度上依赖于单词在句中的绝对位置。因此，在语言建模过程中，考虑单词的绝对位置显得尤为重要。
+此外，DeBERTa 还采用了掩码语言建模（Masked Language Modeling, MLM）作为预训练策略。在这一过程中，模型通过利用周围未被掩码的词汇来预测被掩码的词。DeBERTa 在掩码语言模型任务中充分考虑了位置信息及其上下文词的内容。在解耦注意力机制，上下文词的内容和相对位置被提到了相当重要的位置，但这些词的绝对位置却并没有被该方法充分使用。多数情况下，精确预测高度依赖于绝对位置信息。
 
 \begin{figure*}[htbp]
 \centering  
@@ -310,7 +308,7 @@ DeBERTa 采用了一种高效的实现方法。在其之前的研究中，对于
 \label{fig:emd}
 \end{figure*}
 
-将绝对位置信息整合到模型中可以通过两种主要方式实现。BERT 模型选择在输入层直接引入绝对位置信息。相较之下，DeBERTa 结构则在所有 Transformer 层之后、但在基于聚合的上下文词内容和位置嵌入解码掩码词的 Softmax 层之前，添加绝对位置信息，如图 \ref{fig:emd} 所示。通过这种设计，DeBERTa 能够在所有 Transformer 层中有效捕捉相对位置信息，而在解码掩码词时则将绝对位置信息作为补充信息进行利用。因此，DeBERTa 将其解码组件称为增强掩码解码器（Enhanced Mask Decoder, EMD）。
+将绝对位置信息整合到模型中可以通过两种主要方式实现。BERT 模型选择在输入层直接引入绝对位置信息。相较之下，DeBERTa 结构则在所有 Transformer 层之后、但在基于聚合的上下文词内容和位置嵌入解码掩码词的 Softmax 层之前，添加绝对位置信息，如图 \ref{fig:emd} 所示。这种创新架构使DeBERTa具备双重优势：一方面在全部Transformer层级中精准建模相对位置关系，另一方面在重构遮蔽标记时巧妙融合绝对位置特征作为辅助信号。正是基于这一独特机制，该模型将其核心解码模块命名为"增强型掩码解码器"（Enhanced Mask Decoder, EMD）。
 
 \subsubsection{DeBERTa V3 模型}
 
@@ -322,13 +320,13 @@ DeBERTa 采用了一种高效的实现方法。在其之前的研究中，对于
 \end{align}
 在此，\(\mathcal{C}\) 表示序列中被掩盖词元的索引集合。BERT 的研究者建议，对于被掩盖的词元，10\% 应保持不变，另有 10\% 则用随机选择的词元进行替换，其余的词元则用 \([MASK]\) 标记进行替换。
 
-与 BERT 仅依赖单一的 Transformer 编码器并通过掩码语言模型进行训练的方式不同，ELECTRA 采用生成对抗网络（GAN）的框架，利用两个 Transformer 编码器进行联合训练。具体而言，其中一个编码器作为生成器，经过掩码语言模型的训练，而另一个编码器则作为判别器，通过词元级的二元分类器进行训练。生成器的功能在于生成模糊的词元，以替代输入序列中被掩盖的词元。随后，经过修改的输入序列将被送入判别器进行处理。在判别器中，二元分类器的任务是判断相应的词元是原始词元还是由生成器所替换的词元。我们用 \(\theta_G\) 和 \(\theta_D\) 来分别表示生成器和判别器的参数。判别器的训练目标被称为替换词元检测（Replacement Token Detection, RTD）。生成器的损失函数可以表示为：
+与 BERT 仅依赖单一的 Transformer 编码器并通过掩码语言模型进行训练的方式不同，ELECTRA 采用生成对抗网络（GAN）的框架，利用两个 Transformer 编码器进行联合训练。具体而言，其中一个编码器作为生成器，经过掩码语言模型的训练，而另一个编码器则作为判别器，通过词元级的二元分类器进行训练。生成模块负责合成干扰词元以填充输入序列中的掩码位置，经此扰动后的序列随即输入判别模块进行处理。在判别阶段，通过二元分类机制对每个词元进行溯源分析，判定其属于原始词元或生成模块合成的替代词元。生成模块和判别模块的参数分别定义为 \(\theta_G\)​ 与 \(\theta_D\)​，其中判别模块的优化目标被形式化为替换词元检测任务（Replacement Token Detection, RTD）。生成器的损失函数可以表示为：
 \begin{align} 
 L_{\text{MLM}} = \mathbb{E} \left( - \sum_{i \in \mathcal{C}} \log p_{\theta_G}(\tilde{x}_{i,G} = x_i|\tilde{\mathbf{X}}_G) \right)
 \end{align}
-在此，\(\tilde{\mathbf{X}}_G\) 表示通过在原始序列 \(\mathbf{X}\) 中随机掩盖 15\% 的词元所生成的输入数据，供生成器使用。
+\(\tilde{\mathbf{X}}_G\) 代表对原始输入序列 \(\mathbf{X}\) 实施 15\% 随机掩码处理后的生成器专用输入数据。
 
-判别器的输入序列是通过基于生成器输出的概率分布，对被掩盖的词元进行采样并替换而构建的。
+具体而言，判别器的输入序列构建过程如下：首先依据生成器输出的概率分布进行采样，随后用采样结果替换原序列中被掩码的词元位置。
 \begin{align} 
 \tilde{x}_{i,D} = \begin{cases} \tilde{x}_{i} \sim p_{\theta_G}(\tilde{x}_{i,G} = x_i|\tilde{\mathbf{X}}_G), & i \in \mathcal{C} \\ x_i, & i \notin \mathcal{C} \end{cases}
 \end{align}

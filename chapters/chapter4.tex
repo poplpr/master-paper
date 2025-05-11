@@ -52,7 +52,7 @@ DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & https://huggingfa
 \end{tabular}
 \end{table*}
 
-除了该对比实验外，我们还设计了消融实验，在 AES2 数据集评分基础上，进一步探索大语言模型改写文本的能力。有这样两个问题：原始文本对于大语言模型改写文本的影响有多大？大语言模型改写文本后，新文本的文本质量与原始文本质量一致性如何？为深入探索这两个问题，我们同样设计了两个额外的消融实验放置于 \ref{sec:method-experiment-analysis} 中。
+% 除了该对比实验外，我们还设计了消融实验，在 AES2 数据集评分基础上，进一步探索大语言模型改写文本的能力。有这样两个问题：原始文本对于大语言模型改写文本的影响有多大？大语言模型改写文本后，新文本的文本质量与原始文本质量一致性如何？为深入探索这两个问题，我们同样设计了两个额外的消融实验放置于 \ref{sec:method-experiment-analysis} 中。
 
 \subsection{数据集设置}
 \label{sec:method-experiment-dataset}
@@ -84,9 +84,11 @@ DeepSeek \cite{deepseekai2024deepseekv3technicalreport}                       & 
 \subsection{实验参数设置}
 \label{sec:method-experiment-parameter}
 
+% 本章节所有实验均在配备NVIDIA TITAN RTX显卡（24GB显存）的高性能计算服务器上完成，服务器运行Ubuntu Linux 22.04 LTS操作系统。为保障实验环境的可重复性，我们详细记录了硬件配置和软件环境参数：服务器基础配置信息如表 \ref{tab:os-env} 所示；显卡详细规格参数（包括CUDA版本、驱动版本等）如表 \ref{tab:gpu-env} 所列；实验代码基于Anaconda搭建的Python 3.12.8虚拟环境执行，其中关键依赖库（如PyTorch、Transformers等）的具体版本信息详见表 \ref{tab:python-env}。所有实验环境参数均经过严格测试验证，确保实验结果的可靠性和可复现性。
+
 所有实验均运行于 Ubuntu Linux 22.04 服务器上。详细实验操作系统环境如表 \ref{tab:os-env} 所示。
 
-\begin{table*}[htbp]
+\begin{table*}[h]
 \centering
 \caption{实验操作系统环境} \label{tab:os-env}
 \begin{tabular}{ll}
@@ -108,7 +110,7 @@ DeepSeek \cite{deepseekai2024deepseekv3technicalreport}                       & 
 
 本章节全部实验均在拥有 24GB 显存容量的 NVIDIA TITAN RTX 显卡上完成，该显卡详细环境如表 \ref{tab:gpu-env} 所示。
 
-\begin{table*}[htbp]
+\begin{table*}[h]
 \centering
 \caption{实验显卡环境} \label{tab:gpu-env}
 \begin{tabular}{ll}
