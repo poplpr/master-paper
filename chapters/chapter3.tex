@@ -191,11 +191,11 @@ eb8f967 & Honestly, who would think there   is "Alien Form" on Mars, I mean some
 \begin{tabular}{llcc}
 \toprule
 \textbf{模型类别} & \textbf{模型版本}                 & \textbf{输入价格}  & \textbf{输出价格}  \\ \midrule
-ChatGPT       & gpt-3.5-turbo-0613            & \$1.5/1M token  & \$2/1M token    \\
-GPT4o         & gpt-4o-2024-08-06             & \$2.5/1M token  & \$10/1M token   \\
-Gemini        & gemini-exp-1206               & \$3.5/1M token  & \$14/1M token   \\
-Qwen          & qwen-plus-2024-12-20          & \textyen 0.8/1M token  & \textyen 2/1M token    \\
-DeepSeek      & deepseek-chat V3 (2024-12-24) & \$0.27/1M token & \$1.10/1M token \\ \bottomrule
+ChatGPT \cite{chatgpt}       & gpt-3.5-turbo-0613            & \$1.5/1M token  & \$2/1M token    \\
+GPT4o \cite{gpt4o}         & gpt-4o-2024-08-06             & \$2.5/1M token  & \$10/1M token   \\
+Gemini \cite{geminiteam2024geminifamilyhighlycapable}        & gemini-exp-1206               & \$3.5/1M token  & \$14/1M token   \\
+Qwen \cite{qwen2025qwen25technicalreport}          & qwen-plus-2024-12-20          & \textyen 0.8/1M token  & \textyen 2/1M token    \\
+DeepSeek \cite{deepseekai2024deepseekv3technicalreport}      & deepseek-chat V3 (2024-12-24) & \$0.27/1M token & \$1.10/1M token \\ \bottomrule
 \end{tabular}
 \end{table*}
 
@@ -209,11 +209,11 @@ DeepSeek      & deepseek-chat V3 (2024-12-24) & \$0.27/1M token & \$1.10/1M toke
 \toprule
 \textbf{模型名称} & \textbf{成功个数} & \textbf{生成总数} & \textbf{成功率} \\
 \midrule
-GPT3.5   & 7642      & 10745   & 71.12 \\
-GPT4o    & 8687      & 10745   & 80.85 \\
-Gemini   & 9695      & 10745   & 90.23 \\
-Qwen     & 9840      & 10745   & \textbf{91.58} \\
-Deepseek & 9448      & 10330   & 87.93 \\
+GPT3.5 \cite{chatgpt}   & 7642      & 10745   & 71.12 \\
+GPT4o \cite{gpt4o}   & 8687      & 10745   & 80.85 \\
+Gemini \cite{geminiteam2024geminifamilyhighlycapable}  & 9695      & 10745   & 90.23 \\
+Qwen \cite{qwen2025qwen25technicalreport}    & 9840      & 10745   & \textbf{91.58} \\
+Deepseek \cite{deepseekai2024deepseekv3technicalreport} & 9448      & 10330   & 87.93 \\
 \bottomrule
     \end{tabular}
     \label{tab:construct-dataset-success-rate}
@@ -281,19 +281,19 @@ DeepSeek V3 的商业化与开源策略是其另一显著特色。其 API 定价
                           & \textbf{模型}  & \textbf{MIN} & \textbf{10\%} & \textbf{25\%} & \textbf{50\%} & \textbf{75\%} & \textbf{90\%} & \textbf{MAX}  & \textbf{AVG}   \\
     \midrule
                           & 句子个数        & 2   & 8    & 11   & 16   & 21   & 26   & 53   & 16.65  \\ \midrule
-\multirow{6}{*}{短文词元} & AES2            & 156 & 212  & 267  & 362  & 473  & 588  & 1338 & 385.41 \\
-                          & GPT3.5          & 84  & 208  & 259  & 349  & 454  & 558  & 1257 & 370.24 \\
-                          & GPT4o           & 122 & 199  & 247  & 331  & 428  & 525  & 1185 & 349.90 \\
-                          & Gemini          & 128 & 209  & 261  & 351  & 458  & 565  & 1268 & 372.92 \\
-                          & Qwen            & 111 & 197  & 245  & 325  & 419  & 510  & 1092 & 343.22 \\
-                          & Deepseek        & 115 & 200  & 249  & 333  & 427  & 517  & 1193 & 349.14 \\
+\multirow{6}{*}{短文词元} & AES2 \cite{learning-agency-lab-automated-essay-scoring-2}           & 156 & 212  & 267  & 362  & 473  & 588  & 1338 & 385.41 \\
+                          & GPT3.5 \cite{chatgpt}         & 84  & 208  & 259  & 349  & 454  & 558  & 1257 & 370.24 \\
+                          & GPT4o \cite{gpt4o}          & 122 & 199  & 247  & 331  & 428  & 525  & 1185 & 349.90 \\
+                          & Gemini \cite{geminiteam2024geminifamilyhighlycapable}         & 128 & 209  & 261  & 351  & 458  & 565  & 1268 & 372.92 \\
+                          & Qwen \cite{qwen2025qwen25technicalreport}           & 111 & 197  & 245  & 325  & 419  & 510  & 1092 & 343.22 \\
+                          & Deepseek \cite{deepseekai2024deepseekv3technicalreport}       & 115 & 200  & 249  & 333  & 427  & 517  & 1193 & 349.14 \\
                           \midrule
-\multirow{6}{*}{单句词元} & AES2            & 4   & 11   & 15   & 20   & 28   & 38   & 305  & 23.15  \\
-                          & GPT3.5          & 2   & 11   & 15   & 20   & 27   & 35   & 229  & 22.24  \\
-                          & GPT4o           & 2   & 11   & 14   & 19   & 25   & 33   & 257  & 21.02  \\
-                          & Gemini          & 4   & 11   & 15   & 20   & 27   & 36   & 308  & 22.40  \\
-                          & Qwen            & 4   & 11   & 14   & 19   & 25   & 32   & 189  & 20.62  \\
-                          & Deepseek        & 4   & 11   & 14   & 19   & 25   & 33   & 243  & 20.97 \\
+\multirow{6}{*}{单句词元} & AES2 \cite{learning-agency-lab-automated-essay-scoring-2}           & 4   & 11   & 15   & 20   & 28   & 38   & 305  & 23.15  \\
+                          & GPT3.5 \cite{chatgpt}         & 2   & 11   & 15   & 20   & 27   & 35   & 229  & 22.24  \\
+                          & GPT4o \cite{gpt4o}          & 2   & 11   & 14   & 19   & 25   & 33   & 257  & 21.02  \\
+                          & Gemini \cite{geminiteam2024geminifamilyhighlycapable}         & 4   & 11   & 15   & 20   & 27   & 36   & 308  & 22.40  \\
+                          & Qwen \cite{qwen2025qwen25technicalreport}           & 4   & 11   & 14   & 19   & 25   & 32   & 189  & 20.62  \\
+                          & Deepseek \cite{deepseekai2024deepseekv3technicalreport}       & 4   & 11   & 14   & 19   & 25   & 33   & 243  & 20.97 \\
                           \bottomrule
 \end{tabular}
 

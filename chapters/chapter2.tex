@@ -134,7 +134,7 @@ BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Tran
 	\label{fig:BERT}
 \end{figure}
 
-\subsection{嵌入}
+\subsubsection{嵌入}
 
 对于 BERT 而言，其在嵌入（Embedding）方面的显著改进是一个关键创新。为了使 BERT 能够有效处理多种下游任务，其输入表示能够清晰地区分单个句子和句子对（例如，〈问题, 答案〉）在同一词元序列中。在本研究中，“句子”可以被理解为任意跨度的连续文本，而非严格意义上的自然语言句子。“序列”则是指输入到 BERT 的词元序列，这可以是单个句子，也可以是多个句子组合而成。
 
@@ -149,7 +149,7 @@ BERT 在 Transformer 的基础上并未进行大量改进，而是采用了 Tran
 
 对于每个给定的词元，其输入表示（input representation）是通过对相应的词元（token）、段落（segment）和位置（position）嵌入进行加和来构建的。该结构的可视化展示见图 \ref{fig:BERT-embedding}。
 
-\subsection{预训练与微调}
+\subsubsection{预训练与微调}
 
 BERT 研究的主要贡献在于其二阶段训练过程的有效推广，该过程分为预训练（pretraining）和微调（finetuning）两个阶段，训练流程的示意图如图 \ref{fig:BERT-OverAll} 所示。在预训练阶段，BERT 通过大规模的无标注文本数据学习语言的深层次表示，采用了带掩码的语言模型（Masked Language Model, MLM）和下一句预测（Next Sentence Prediction, NSP）两种任务，从而使模型能够理解上下文的双向信息。在微调阶段，BERT 通过在少量标注数据上进行训练，能够针对特定任务进行调整，进而高效适应多种自然语言处理任务，如文本分类、问答系统和命名实体识别等。
 
@@ -161,6 +161,224 @@ BERT 研究的主要贡献在于其二阶段训练过程的有效推广，该过
 \end{figure}
 
 这种预训练-微调的二阶段训练范式显著提高了模型在多种自然语言处理（NLP）任务上的性能，标志着该领域的一次重要变革。BERT 的成功激励了大量基于 Transformer 架构的预训练模型的后续研发，例如本文将使用的 RoBERTa 和 DeBERTa，以及其他在 BERT 模型基础上进行改进的模型。这些模型在不同任务中展现出更高的效率和准确性。通过这些创新，BERT 不仅推动了学术界对预训练模型的深入研究，也促进了工业界在实际应用中的广泛采用。
+
+\subsection{RoBERTa 模型}
+\label{sec:method-pretrain-roberta}
+
+RoBERTa \cite{liu_roberta_2019}（Robustly Optimized BERT Approach）在 BERT \cite{devlin_bert_2019} 模型的基础上进行了多方面的优化，显著提升了模型的整体性能。
+
+在训练策略方面，原始 BERT 模型存在训练不足的问题。为了解决这一缺陷，RoBERTa 通过延长训练步数、采用更大的批次进行训练，并在更广泛的数据集上进行训练。在实验中，较大的批次训练 BERT 模型的结果表明，这种策略能够有效降低训练的困惑度（perplexity），并提高下游任务的准确率。此外，大批次训练更易于通过分布式数据并行实现，从而显著提升了训练效率。
+
+在训练数据的选择上，RoBERTa 使用了总计 160GB 的未压缩文本，涵盖多种语料库，这一数据量远超 BERT 原始训练所用的 16GB。此结果充分表明数据量和多样性在预训练过程中的重要性。此外，BERT 原始实现中，掩码是在数据预处理阶段一次性生成的，形成了静态掩码。尽管通过数据复制增加掩码的多样性，但该方法仍存在局限性。相较之下，RoBERTa 采用了动态掩码机制，即在每次向模型输入序列时生成新的掩码模式。这一方法在长时间训练或处理大规模数据集时表现出明显优势，不仅提高了训练效率，还在实验中显示出相较于静态掩码更优或相当的性能。
+
+在模型输入格式的优化方面，原始 BERT 模型在训练时使用了下一个句子预测（NSP）任务，以提升下游任务的性能。然而，相关研究 \cite{Lample2019CrosslingualLM, Yang2019XLNetGA, Joshi2019SpanBERTIP} 对这一任务提出了质疑。RoBERTa 经过对比实验发现，去除 NSP 损失并采用从单个文档中采样完整句子作为输入，能够匹配或略微提升下游任务的性能。具体而言，限制序列来自单个文档的 DOC-SENTENCES 格式表现优于从多个文档打包的 FULL-SENTENCES 格式，但为了便于与相关研究的比较，最终 RoBERTa 选择了从多个文档打包的 FULL-SENTENCES 格式。此外，RoBERTa 不再使用 BERT 原有的两文档片段拼接并添加 NSP 损失的输入格式，而是采用从一个或多个文档中连续采样完整句子的方式，确保输入总长度不超过 512 个标记。这一格式有助于模型学习长距离依赖关系，从而增强文本理解能力。
+
+在文本编码的改进方面，BERT 原实现使用了一个大小为 30K 的字符级字节对编码 \cite{BPE}（BPE）词汇表，并需要进行启发式分词规则的预处理。RoBERTa 借鉴其他研究，采用了一个包含 50K 子词单元的更大字节级 BPE 词汇表，这一方法无需额外的预处理或分词。尽管在某些任务上性能略有下降，但由于其通用编码方案的优势，RoBERTa 仍被广泛应用于后续的实验中。
+
+通过以上对 BERT 的改进，RoBERTa 在多个自然语言处理任务中展现出卓越的性能，为后续研究提供了强有力的支持。
+
+在本文中，采用 RoBERTa-base 和 RoBERTa-Large 两种大小的 RoBERTa 模型，其参数如表 \ref{tab:roberta-parameter} 所示。表中的参数包括 Transformer 层数、隐藏层维度、注意力头数以及总参数量。这些参数的设计反映了模型的复杂性及其学习能力。较大的模型（RoBERTa-Large）在处理更复杂的语言任务时，能够更好地捕捉深层次的语义关系和上下文信息，而较小的模型（RoBERTa-Base）则在计算效率和资源消耗上具有一定的优势。通过对比这两种模型的性能，我们能够深入探讨不同规模模型在文本理解和生成任务中的表现差异，从而为后续研究提供有价值的参考。
+
+\begin{table*}[htbp]
+\centering
+\caption{ RoBERTa-Base 和 RoBERTa-Large 参数} \label{tab:roberta-parameter}
+\begin{tabular}{lcc}
+\toprule
+               & \multicolumn{1}{l}{\textbf{RoBERTa-Base} \cite{liu_roberta_2019}} & \multicolumn{1}{l}{\textbf{RoBERTa-Large} \cite{liu_roberta_2019}} \\ \midrule
+Transformer 层数 & 12                                        & 24                                         \\
+隐藏层维度          & 768                                       & 1024                                       \\
+注意力头数          & 12                                        & 16                                         \\
+总参数量           & 125M                                      & 355M                                      \\ \bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{DeBERTa 模型}
+\label{sec:method-pretrain-deberta}
+
+目前 DeBERTa 系列模型公开的论文仅有 DeBERTa 模型 \cite{he_deberta_2021} 和 DeBERTa V3 模型 \cite{he2023debertav3improvingdebertausing}，我们的实验中将会使用 DeBERTa V3 模型，本节将会对 DeBERTa 模型对于 BERT \cite{devlin_bert_2019} 和 RoBERTa 模型 \cite{liu_roberta_2019} 的改进进行介绍。
+
+\subsubsection{DeBERTa 模型}
+
+DeBERTa 模型 \cite{he_deberta_2021} 是预训练语言模型演进过程中的一项重要成果，相较于 RoBERTa 和 BERT，其在多个方面进行了显著改进。这些改进主要体现在注意力机制、掩码解码器以及训练方法等方面，从而显著提升了模型的性能和泛化能力。
+
+在注意力机制的设计上，BERT 和 RoBERTa 将每个单词表示为其词嵌入（内容）与位置嵌入的和，这种表示方式在一定程度上融合了内容和位置信息。相较之下，DeBERTa 采用了一种创新的解耦注意力机制，将每个单词分别编码为两个独立的向量，分别代表内容和位置。在计算单词间的注意力权重时，DeBERTa 利用基于内容和相对位置的解耦矩阵进行独立计算。这种方法使得模型能够更精细地捕捉单词之间的关系。以句子 “The dog chased the cat” 为例，当分析 “dog” 与 “cat” 之间的关系时，DeBERTa 不仅考虑它们的语义内容，还能基于相对位置更准确地判断其依赖关系。相较而言，BERT 和 RoBERTa 在处理这种复杂关系时则显得不够细致。
+
+对于序列中位置为 \(i\) 的词元（token），DeBERTa 采用两个向量进行表示，分别为 \(\mathbf{H}_{i}\) 和 \(\mathbf{P}_{i|j}\)。其中，\(\mathbf{H}_{i}\) 表示该词元的内容信息，而 \(\mathbf{P}_{i|j}\) 则表示该词元与位置为 \(j\) 的词元之间的相对位置关系。词元 \(i\) 与 \(j\) 之间的交叉注意力分数的计算可以被分解为四个组成部分，具体如下：
+\begin{align}
+\label{eq:deberta-attention}
+\begin{split}
+\mathbf{A}_{i, j} & = \{\mathbf{H}_{i}, \mathbf{P}_{i | j}\} \times \{\mathbf{H}_{j}, \mathbf{P}_{j | i}\}^{\intercal} \\
+& = \mathbf{H}_{i}\mathbf{H}_{j}^{\intercal}+\mathbf{H}_{i}\mathbf{P}_{j | i}^{\intercal}+\mathbf{P}_{i | j}\mathbf{H}_{j}^{\intercal}+\mathbf{P}_{i | j}\mathbf{P}_{j | i}^{\intercal}.
+\end{split}
+\end{align}
+
+换言之，单词对之间的注意力权重可以通过将基于其内容和位置的解耦矩阵应用于四个注意力分数的求和来计算。这四个分数分别对应于内容对内容、内容对位置、位置对内容以及位置对位置的注意力。
+
+在 DeBERTa 之前，相对位置编码的方法在计算注意力权重时，通常依赖于独立的嵌入矩阵来确定相对位置偏差 \cite{Shaw2018SelfAttentionWR, Huang2018MusicTG}。这相当于仅利用公式 \ref{eq:deberta-attention} 中的内容对内容和内容对位置项来进行注意力权重的计算。DeBERTa 模型则认为位置对内容的项同样具有重要性，因为单词对的注意力权重不仅依赖于其内容信息，还受到相对位置的影响。只有同时考虑内容对位置和位置对内容的项，才能对这种关系进行全面建模。鉴于 DeBERTa 使用了相对位置嵌入，因此位置对位置的项在我们的实现中被认为提供的额外信息有限，因此从公式 \ref{eq:deberta-attention} 中去除了该项。
+
+以单头注意力为例，标准的自注意力操作 \cite{transformer} 可以表示为：
+\begin{align}
+\mathbf{Q} = \mathbf{HW_{q}}, \mathbf{K} &= \mathbf{HW_{k}}, V = \mathbf{HW_{v}}, \mathbf{A} = \frac{\mathbf{QK}^{\intercal}}{\sqrt{d}} \\
+\mathbf{H_{o}} &= \text{softmax}(\mathbf{A})\mathbf{V}
+\label{eq:transformer-attention1}
+\end{align}
+其中，$\mathbf{H} \in \mathbb{R}^{N×d}$ 表示输入的隐藏向量，$\mathbf{H_{o}} \in \mathbb{R}^{N×d}$ 是自注意力的输出，$\mathbf{W_{q}}$、$\mathbf{W_{k}}$、$\mathbf{W_{v}} \in \mathbb{R}^{d×d}$ 是投影矩阵，$\mathbf{A} \in \mathbb{R}^{N×N}$ 是注意力矩阵，$N$ 是输入序列的长度，$d$ 是隐藏状态的维度。
+
+记 $k$ 为最大相对距离，$\delta(i, j) \in [0, 2k)$ 为从词元 $i$ 到词元 $j$ 的相对距离，其定义为：
+\begin{align}
+\delta(i, j)=\begin{cases}
+0, & \text{当~} i - j \leq -k \\
+2k - 1, & \text{当~} i - j \geq k \\
+i - j + k, & \text{其他情况}
+\end{cases}
+\label{eq:deberta-distance}
+\end{align}
+
+在 DeBERTa 中，带有相对位置偏差的解耦自注意力机制可以用公式 \ref{eq:deberta-dis-att} 来表示。在该公式中，\(\mathbf{Q}_{c}\)、\(\mathbf{K}_{c}\) 和 \(\mathbf{V}_{c}\) 分别是通过投影矩阵 \(\mathbf{W}_{q,c}\)、\(\mathbf{W}_{k,c}\) 和 \(\mathbf{W}_{v,c} \in \mathbb{R}^{d \times d}\) 生成的投影内容向量。此外，\(\mathbf{P} \in \mathbb{R}^{2k \times d}\) 表示在所有层中共享的相对位置嵌入向量，该向量在正向传播过程中保持不变。相对位置向量 \(\mathbf{Q}_{r}\) 和 \(\mathbf{K}_{r}\) 则是通过投影矩阵 \(\mathbf{W}_{q,r}\) 和 \(\mathbf{W}_{k,r} \in \mathbb{R}^{d \times d}\) 生成的。
+\begin{align} \label{eq:deberta-dis-att}
+\begin{split}
+    \mathbf{Q}_c = \mathbf{H} \mathbf{W}_{q,c}, 
+    \mathbf{K}_c &= \mathbf{H} \mathbf{W}_{k,c}, 
+    \mathbf{V}_c = \mathbf{H} \mathbf{W}_{v,c}, 
+    \mathbf{Q}_r = \mathbf{P} \mathbf{W}_{q,r}, 
+    \mathbf{K}_r = \mathbf{P} \mathbf{W}_{k,r} \\
+    \tilde{\mathbf{A}}_{i,j} &= \underbrace{\mathbf{Q}^{c}_{i}{\mathbf{K}^{c}_{j}}^{\intercal}}_{\text{(a) content-to-content}}  
+    + \underbrace{\mathbf{Q}^{c}_{i}{{\mathbf{K}^{r}_{\delta(i,j)}}^{\intercal}}}_{\text{(b) content-to-position}}
+    + \underbrace{\mathbf{K}^{c}_{j}{{\mathbf{Q}^{r}_{\delta(j,i)}}^{\intercal}}}_{\text{(c) position-to-content}} \\
+    \mathbf{H_o} &= \text{softmax}(\frac{\tilde{\mathbf{A}}}{\sqrt{3d}})\mathbf{V}_c
+\end{split}
+\end{align}
+在此，\(\tilde{\mathbf{A}}_{i,j}\) 表示注意力矩阵 \(\tilde{\mathbf{A}}\) 的一个元素，具体对应于词元 \(i\) 到词元 \(j\) 的注意力分数。具体而言，\(\mathbf{Q}_{i}^{c}\) 是矩阵 \(\mathbf{Q}_{c}\) 的第 \(i\) 行，而 \(\mathbf{K}_{j}^{c}\) 则是矩阵 \(\mathbf{K}_{c}\) 的第 \(j\) 行。同时，\(\mathbf{K}_{\delta(i,j)}^{r}\) 表示相对位置向量 \(\mathbf{K}_{r}\) 中与相对距离 \(\delta(i,j)\) 对应的第 \(\delta(i,j)\) 行，\(\mathbf{Q}_{\delta(j,i)}^{r}\) 则是与相对距离 \(\delta(j,i)\) 对应的第 \(\delta(j,i)\) 行。值得注意的是，DeBERTa 在此使用 \(\delta(j,i)\) 而非 \(\delta(i,j)\)，原因在于对于特定位置 \(i\)，位置对内容的计算实际上是基于位置 \(j\) 的键内容相对于位置 \(i\) 的查询位置的注意力权重。因此，此时相对距离应为 \(\delta(j,i)\)。位置对内容项的计算公式为 \(\mathbf{K}_{j}^{c} \cdot {\mathbf{Q}_{\delta(j,i)}^{r}}^{\intercal}\)，而内容对位置的计算方式则类似。
+
+最后，对注意力矩阵 \(\tilde{\mathbf{A}}\) 应用一个缩放因子 \(\frac{1}{\sqrt{3d}}\)。这一缩放因子在模型训练的稳定性方面发挥了关键作用 \cite{transformer}，尤其是在处理大规模预训练语言模型时，其重要性愈加突出。
+
+\begin{algorithm}[htb]
+\caption{解耦注意力（Disentangled Attention）}
+\label{algo:DA}
+%\SetAlgoLined
+ \begin{algorithmic}[1]
+    \Require {隐藏状态 $\mathbf{H}$, 相对距离嵌入 $\mathbf{P}$, 相对距离矩阵 $\mathbf{\delta}$.}
+    内容投影矩阵 $\mathbf{W}_{k,c}$, $\mathbf{W}_{q,c}$, $\mathbf{W}_{v,c}$,
+    位置投影矩阵 $\mathbf{W}_{k,r}$, $\mathbf{W}_{q,r}$.
+    \Ensure $\mathbf{H}_o$
+
+    \State {$\mathbf{K}_c = \mathbf{H}\mathbf{W}_{k,c}$, $\mathbf{Q}_c = \mathbf{H}\mathbf{W}_{q,c}$, $\mathbf{V}_c = \mathbf{H}\mathbf{W}_{v,c}$,   $\mathbf{K}_r = \mathbf{P}\mathbf{W}_{k,r}$, $\mathbf{Q}_r = \mathbf{P}\mathbf{W}_{q,r}$}
+    \State {$\mathbf{A}_{c\rightarrow c} = \mathbf{Q}_c \mathbf{K}_c^{\intercal}$} 
+    \For{$i=0,...,N-1$} 
+        \State {$\tilde{\mathbf{A}}_{c\rightarrow p}[i,:] = \mathbf{Q}_{c}[i,:] \mathbf{K}_r^{\intercal}$} 
+    \EndFor
+    \For {$i=0,...,N-1$}
+        \For {$j=0,...,N-1$}
+        \State {$\mathbf{A}_{c\rightarrow p}[i,j] = \tilde{\mathbf{A}}_{c\rightarrow p}[i,\mathbf{\delta}[i,j]]$} 
+        \EndFor
+    \EndFor
+    \For{$j=0,...,N-1$}
+        \State {$\tilde{\mathbf{A}}_{p\rightarrow c}[:,j] = \mathbf{K}_{c}[j,:] \mathbf{Q}_r^{\intercal}$} 
+    \EndFor
+    \For {$j=0,...,N-1$}
+        \For {$i=0,...,N-1$}
+        \State {$\mathbf{A}_{p\rightarrow c}[i,j] = \tilde{\mathbf{A}}_{p\rightarrow c}[\mathbf{\delta}[j,i],j]$} 
+        \EndFor
+    \EndFor
+    \State {$\tilde{\mathbf{A}}=\mathbf{A}_{c\rightarrow c} + \mathbf{A}_{c\rightarrow p} + \mathbf{A}_{p\rightarrow c}$}
+    \State {$\mathbf{H}_o = \text{softmax}(\frac{\tilde{\mathbf{A}}}{\sqrt{3d}})\mathbf{V}_c$}
+ \end{algorithmic}
+
+\end{algorithm}
+
+DeBERTa 采用了一种高效的实现方法。在其之前的研究中，对于长度为 \(N\) 的输入序列，每个词元的相对位置嵌入需要 \(O(N^{2}d)\) 的空间复杂度 \cite{Shaw2018SelfAttentionWR, Huang2018MusicTG, Dai2019TransformerXLAL}。然而，以内容对位置的计算为例，DeBERTa 观察到相对距离 \(\delta(i, j)\) 的范围为 \([0, 2k)\)，并且所有可能的相对位置嵌入实际上构成了矩阵 \(\mathbf{K}_{r} \in \mathbb{R}^{2k \times d}\) 的一个子集。因此，我们能够在所有查询的注意力计算过程中重用 \(\mathbf{K}_{r}\)，从而显著降低了存储需求。
+
+在 DeBERTa 中，预训练阶段将最大相对距离 \(k\) 设置为 512。解耦的注意力权重可以通过算法 \ref{algo:DA} 高效计算。设 \(\delta\) 为根据公式 \ref{eq:deberta-distance} 得到的相对位置矩阵，其中 \(\delta[i, j] = \delta(i, j)\)。在此过程中，我们并不为每个查询分配独立的相对位置嵌入矩阵，而是通过将每个查询向量 \(\mathbf{Q}_{c}[i, :]\) 乘以 \(\mathbf{K}_{r}^{\intercal} \in \mathbb{R}^{d \times 2k}\)（如算法 \ref{algo:DA} 的第 3-5 行），并利用相对位置矩阵 \(\delta\) 作为索引来提取注意力权重（如算法 \ref{algo:DA} 的第 6-10 行）。为了计算位置对内容的注意力分数，我们通过将每个键向量 \(\mathbf{K}_{c}[j, :]\) 乘以 \(\mathbf{Q}_{r}^{T}\) 来获得注意力矩阵 \(\tilde{\mathbf{A}}_{p \to c}[:, j]\) 的列向量（如算法 \ref{eq:deberta-distance} 的第 11-13 行），并最终通过相对位置矩阵 \(\delta\) 作为索引提取相应的注意力分数（如算法 \ref{algo:DA} 的第 14-18 行）。通过这种方法，我们避免了为每个查询分配内存以存储相对位置嵌入，从而将空间复杂度降低至 \(O(kd)\)，仅需存储 \(\mathbf{K}_{r}\) 和 \(\mathbf{Q}_{r}\)。
+
+此外，DeBERTa 还采用了掩码语言建模（Masked Language Modeling, MLM）作为预训练策略。在这一过程中，模型通过利用周围未被掩码的词汇来预测被掩码的词。DeBERTa 在 MLM 任务中充分考虑了上下文词的内容及其位置信息。尽管解耦注意力机制已经整合了上下文词的内容和相对位置，但它并未充分考虑这些词的绝对位置，而在许多情况下，绝对位置对于准确预测至关重要。
+
+以句子“a new store opened beside the new mall”为例，若将“store”和“mall”进行掩码以进行预测，仅依赖局部上下文（如相对位置和周边词汇）可能使模型难以区分句中的“store”和“mall”，因为这两个词相对于“new”的相对位置是相同的。为了解决这一局限性，模型需要将绝对位置作为补充信息纳入考虑。例如，在该句中，主语是“store”而非“mall”，这种句法上的细微差别在很大程度上依赖于单词在句中的绝对位置。因此，在语言建模过程中，考虑单词的绝对位置显得尤为重要。
+
+\begin{figure*}[htbp]
+\centering  
+\subfloat[BERT 解码层]{
+    \includegraphics[trim={0.5mm 0.5mm 0.5mm 0.5mm},clip,width=0.35\linewidth]{figures/Model_BERT_S.jpg}
+    % \label{fig:bert-a}
+}
+\hfill
+\subfloat[改进的遮掩解码]{
+    \includegraphics[trim={0.5mm 0.5mm 0.5mm 0.5mm},clip,width=0.58\linewidth]{figures/Model_EMD_S.jpg}
+    % \label{fig:emd-b}
+}
+
+\caption{BERT 与 DeBERTa 解码层的比较 \cite{he_deberta_2021}}
+\label{fig:emd}
+\end{figure*}
+
+将绝对位置信息整合到模型中可以通过两种主要方式实现。BERT 模型选择在输入层直接引入绝对位置信息。相较之下，DeBERTa 结构则在所有 Transformer 层之后、但在基于聚合的上下文词内容和位置嵌入解码掩码词的 Softmax 层之前，添加绝对位置信息，如图 \ref{fig:emd} 所示。通过这种设计，DeBERTa 能够在所有 Transformer 层中有效捕捉相对位置信息，而在解码掩码词时则将绝对位置信息作为补充信息进行利用。因此，DeBERTa 将其解码组件称为增强掩码解码器（Enhanced Mask Decoder, EMD）。
+
+\subsubsection{DeBERTa V3 模型}
+
+由于 ELECTRA \cite{clark2020electrapretrainingtextencoders} 中的替换词元检测（Replaced Token Detection, RTD）和 DeBERTa 中的解耦注意力机制已被证实在预训练阶段具有较高的样本效率，DeBERTa V3 因而应运而生。该模型将原始 DeBERTa 中采用的掩码语言模型（Masked Language Modeling, MLM）目标替换为替换词元检测目标，以充分整合后者的优势。
+
+基于 Transformer 的预训练语言模型通常在大规模文本数据集上进行训练，旨在通过自监督学习的目标来获取上下文中单词的表示，这一目标被称为掩码语言建模（Masked Language Modeling, MLM）\cite{devlin_bert_2019}。具体而言，考虑一个序列 \(X = \{x_i\}\)，我们随机选择并掩盖其中 15\% 的词元，从而生成一个损坏后的序列 \(\tilde{X}\)。接下来，我们训练一个由参数 \(\theta\) 表示的语言模型，以基于 \(\tilde{X}\) 来预测被掩盖的词元 \(\tilde{x}\)，以重建原始序列 \(X\)：
+\begin{align}
+\max_{\theta} \log p_{\theta}(X|\tilde{X}) = \max_{\theta} \sum_{i \in \mathcal{C}} \log p_{\theta}(\tilde{x}_i = x_i|\tilde{X})
+\end{align}
+在此，\(\mathcal{C}\) 表示序列中被掩盖词元的索引集合。BERT 的研究者建议，对于被掩盖的词元，10\% 应保持不变，另有 10\% 则用随机选择的词元进行替换，其余的词元则用 \([MASK]\) 标记进行替换。
+
+与 BERT 仅依赖单一的 Transformer 编码器并通过掩码语言模型进行训练的方式不同，ELECTRA 采用生成对抗网络（GAN）的框架，利用两个 Transformer 编码器进行联合训练。具体而言，其中一个编码器作为生成器，经过掩码语言模型的训练，而另一个编码器则作为判别器，通过词元级的二元分类器进行训练。生成器的功能在于生成模糊的词元，以替代输入序列中被掩盖的词元。随后，经过修改的输入序列将被送入判别器进行处理。在判别器中，二元分类器的任务是判断相应的词元是原始词元还是由生成器所替换的词元。我们用 \(\theta_G\) 和 \(\theta_D\) 来分别表示生成器和判别器的参数。判别器的训练目标被称为替换词元检测（Replacement Token Detection, RTD）。生成器的损失函数可以表示为：
+\begin{align} 
+L_{\text{MLM}} = \mathbb{E} \left( - \sum_{i \in \mathcal{C}} \log p_{\theta_G}(\tilde{x}_{i,G} = x_i|\tilde{\mathbf{X}}_G) \right)
+\end{align}
+在此，\(\tilde{\mathbf{X}}_G\) 表示通过在原始序列 \(\mathbf{X}\) 中随机掩盖 15\% 的词元所生成的输入数据，供生成器使用。
+
+判别器的输入序列是通过基于生成器输出的概率分布，对被掩盖的词元进行采样并替换而构建的。
+\begin{align} 
+\tilde{x}_{i,D} = \begin{cases} \tilde{x}_{i} \sim p_{\theta_G}(\tilde{x}_{i,G} = x_i|\tilde{\mathbf{X}}_G), & i \in \mathcal{C} \\ x_i, & i \notin \mathcal{C} \end{cases}
+\end{align}
+
+判别器的损失函数可表示为：
+\begin{align}
+L_{\text{RTD}} = \mathbb{E} \left( - \sum_{i} \log p_{\theta_D} \left( \mathbb{1}(\tilde{x}_{i,D} = x_i)|\tilde{X}_D, i \right) \right) 
+\end{align}
+在此，\(\mathbb{1}(\cdot)\) 表示指示函数，而 \(\tilde{X}_D\) 则是依据公式 3 构建的判别器输入。在 ELECTRA 模型中，损失函数 \(L_{\text{MLM}}\) 和 \(L_{\text{RTD}}\) 进行联合优化，整体损失 \(L\) 定义为 \(L = L_{\text{MLM}} + \lambda L_{\text{RTD}}\)，其中 \(\lambda\) 是判别器损失 \(L_{\text{RTD}}\) 的权重参数，通常在 ELECTRA 中设定为 50。
+
+此外，DeBERTa V3 采用了一种创新的梯度解耦嵌入共享（Gradient-Disentangled Embedding Sharing, GDES）方法，以替代最初在 ELECTRA 中提出的用于替换词元检测的词嵌入共享（Embedding Sharing, ES）策略。这一改进显著增强了 DeBERTa V3 的性能表现。
+
+\begin{figure*}[htbp]
+\centering  
+\subfloat[嵌入共享]{
+\includegraphics[width=0.31\linewidth,trim={0.1cm 11.8cm 18.5cm 0.1cm},clip]{figures/LRTD-a.pdf}
+}
+\hfill
+\subfloat[无嵌入共享]{
+\includegraphics[width=0.31\linewidth,trim={0.1cm 11.7cm 18.5cm 0.1cm},clip]{figures/LRTD-b.pdf}
+}
+\hfill
+\subfloat[梯度解耦嵌入共享]{
+\includegraphics[width=0.31\linewidth,trim={0.1cm 10.4cm 17.5cm 0.1cm},clip]{figures/LRTD-c.pdf}
+}
+\caption{不同嵌入共享方法示意图 \cite{he2023debertav3improvingdebertausing}}
+\label{fig:es}
+\end{figure*}
+
+DeBERTa V3 引入了一种名为梯度解耦嵌入共享（Gradient-Disentangled Embedding Sharing, GDES）的方法，旨在克服传统嵌入共享（Embedding Sharing, ES）和无嵌入共享（No Embedding Sharing, NES）所存在的不足，同时保留其优点。图 \ref{fig:es} 展示了不同嵌入共享策略的示意图。在嵌入共享（ES）策略中，参数 \(\mathbf{E}\)、\(\theta_G\) 和 \(\theta_D\) 在一次反向传播中依据损失函数 \(L_{\text{MLM}} + \lambda L_{\text{RTD}}\) 共同更新。而在无嵌入共享（NES）策略中，参数 \(\mathbf{E}_G\) 和 \(\theta_G\) 首先基于 \(L_{\text{MLM}}\) 进行反向传播更新，然后 \(\mathbf{E}_D\) 和 \(\theta_D\) 则依据 \(\lambda L_{\text{RTD}}\) 进行独立更新。与此不同，梯度解耦嵌入共享（GDES）方法首先根据 \(L_{\text{MLM}}\) 更新 \(\mathbf{E}_G\) 和 \(\theta_G\)，接着则通过 \(\lambda L_{\text{RTD}}\) 和 \(\mathbf{E}_G\) 更新 \(\mathbf{E}_{\Delta}\) 和 \(\theta_D\)。在此过程中，停止梯度操作符 \(sg\) 被应用，以防止判别器对 \(\mathbf{E}_G\) 的更新。
+
+如图 \ref{fig:es}（c）所示，梯度解耦嵌入共享方法允许生成器与判别器之间共享词嵌入，这使得两者能够从同一词汇表中学习并利用嵌入中蕴含的丰富语义信息。然而，与传统的嵌入共享方法相比，梯度解耦嵌入共享方法确保替换词元检测损失不会对生成器的梯度产生影响，从而避免了目标冲突带来的干扰和效率低下的问题。相反，该方法仅利用掩码语言模型损失来更新生成器的嵌入，确保生成器输出的一致性与连贯性。最终，梯度解耦嵌入共享方法能够实现与无嵌入共享相当的收敛速度，同时不牺牲嵌入的质量。
+
+为实现梯度解耦嵌入共享，DeBERTa V3 将判别器的嵌入重新参数化为 \(\mathbf{E}_D = sg(\mathbf{E}_G) + \mathbf{E}_{\Delta}\)，其中停止梯度算子 \(sg\) 防止梯度流经生成器的嵌入 \(\mathbf{E}_G\)，仅更新残差嵌入 \(\mathbf{E}_{\Delta}\)。在训练过程中，\(\mathbf{E}_{\Delta}\) 被初始化为零矩阵，并依据无嵌入共享的训练流程进行模型训练。在每次迭代中，生成器首先为判别器生成输入，并利用掩码语言模型损失更新 \(\mathbf{E}_G\) 和 \(\mathbf{E}_D\)。随后，判别器在生成的输入上进行操作，并通过梯度解耦嵌入共享损失仅更新 \(\mathbf{E}_D\) 的参数 \(\mathbf{E}_{\Delta}\)。训练完成后，\(\mathbf{E}_{\Delta}\) 将被加到 \(\mathbf{E}_G\) 上，得到的矩阵作为判别器的最终嵌入 \(\mathbf{E}_D\)。
+
+DeBERTa V3 进行了广泛的实验，以评估梯度解耦嵌入共享方法相较于嵌入共享和无嵌入共享的有效性。实验结果表明，梯度解耦嵌入共享是一种有效的权重共享策略，适用于结合掩码语言模型和替换词元检测的预训练语言模型。因此，DeBERTa V3 模型在 Kaggle 排行榜和深度学习领域展现出卓越的性能。在本实验中，使用的 DeBERTa 系列模型包括 DeBERTa-V3-Base 和 DeBERTa-V3-Large，其模型参数如表 \ref{tab:deberta-parameter} 所示。
+
+\begin{table*}[htbp]
+\centering
+\caption{DeBERTa-V3-Base 和 DeBERTa-V3-Large 模型参数} \label{tab:deberta-parameter}
+\begin{tabular}{lcc}
+\toprule
+               & \multicolumn{1}{l}{\textbf{DeBERTa-V3-Base} \cite{he2023debertav3improvingdebertausing}} & \multicolumn{1}{l}{\textbf{DeBERTa-V3-Large} \cite{he2023debertav3improvingdebertausing}} \\ \midrule
+Transformer 层数 & 12                                           & 24                                            \\
+隐藏层维度          & 768                                          & 1024                                          \\
+词汇表大小          & 128K                                         & 128K                                          \\
+主干网络参数量        & 86M                                          & 304M                                          \\
+嵌入层参数量         & 98M                                          & 131M                                \\ \bottomrule         
+\end{tabular}
+\end{table*}
 
 \section{AI 生成文本检测技术}
 \label{sec:llmdetect}
