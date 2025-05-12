@@ -32,10 +32,199 @@
 
 % 在上文中，本文介绍了两种流行且被本课题应用的预训练模型：RoBERTa \cite{liu_roberta_2019} 和 DeBERTa \cite{he_deberta_2021, he2023debertav3improvingdebertausing}。这两种模型在文本理解和生成任务中都表现出色，尤其是在文本分类和检测方面，已被广泛应用于多个研究领域。
 
+\section{基于句子级文本检测技术的文档级文本检测方法}
+\label{sec:method-sent2arti}
+
+本研究提出了一种层次化文档检测框架，其核心架构如图\ref{fig:method-sent2arti}所示。该方法采用"分而治之"的策略，首先将输入文档通过句子分割模块分解为独立的句子单元。每个句子单元并行送入两个处理通道：第一通道采用冻结参数的DeBERTa-V3-Large模型执行细粒度检测，该模型已在句子级数据上完成微调，能够精准识别局部改写特征；第二通道计算句子贡献度，该贡献度通过多头注意力机制捕获句子间的语义关联强度。最终通过加权融合模块将各句子的检测置信度与其对应的注意力权重进行矩阵乘法运算，采用线性层降维后得到句子贡献度，最后将该贡献度与句子检测结果相乘生成文档级检测得分。这种设计实现了三个关键突破：（1）通过分层处理解决长文本建模难题；（2）引入注意力机制保留上下文语义；（3）建立端到端的可微分计算流程。
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/sent2arti.jpg}
+    \caption{基于句子级文本检测技术的文档级文本检测方法}
+    \label{fig:method-sent2arti}
+\end{figure*}
+
+为验证所提方法的优越性，本文也设计了系统的对比实验方案。基线模型包括三种典型架构：（1）直接迁移模型，将在句子级数据微调的 DeBERTa-V3-Large 模型直接应用于文档检测，用于验证领域适配性问题；（2）朴素加权模型，采用等权重策略（固定注意力值为1）处理所有句子，作为注意力机制有效性的对照基准；（3）长度加权模型，将句子长度作为权重系数，验证表面特征的有效性。所有对比模型均采用相同的训练/测试数据划分。
+
+接下来将介绍基于句子级文本检测技术的文档级文本检测方法的三大模块，分别为句子分割模块、句子贡献度计算模块和句子检测模块。
+
+\subsection{句子分割}
+
+本节句子分割应用 \ref{sec:TOSWT-gen-sentence_splitter} 节中介绍的句子分割工具。这种分割方法能够将输入的文本字符串精准地分割成独立的句子，返回一个结构化的句子列表。其核心原理是通过一系列精心设计的正则表达式和逻辑规则来识别句子边界，有效处理各种复杂的标点符号和特殊情况。
+
+该句子分割器的处理流程分为四个关键步骤。首先进行输入验证，检查输入文本是否为None或空字符串，确保对无效输入的优雅处理。其次，通过多个正则表达式规则在句子边界处插入换行符作为分隔符，这些规则涵盖了非句号结束标记、多重句号、标点符号后接引号或括号等多种复杂情况。然后，系统会进一步处理特殊标点情况，包括识别荣誉称谓、大写字母缩写和数字相关符号等，避免错误分割。最后，系统会清理文本中的多余空格和换行符，确保输出格式整洁。
+
+\subsection{句子贡献度计算}
+
+句子贡献度计算模块的设计旨在通过多头注意力机制捕获句子间的语义关联强度。该模块的核心思想是通过计算句子间的注意力权重，来评估每个句子在整体文本中的重要性和贡献度。句子列表 \( S = [s_1, s_2, \ldots, s_n]^T\) 经过句子贡献度计算模块后得到每一个句子的贡献度 \( \textbf{g} = [g_1, g_2, \ldots, g_n]^T\)。具体过程如图 \ref{fig:method-sent-contribution} 所示。
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{figures/sent-contribution.jpg}
+    \caption{句子贡献度计算}
+    \label{fig:method-sent-contribution}
+\end{figure*}
+
+具体而言，该模块先将每个句子特征提取：
+\begin{equation}
+\begin{aligned}
+    \textbf{H} = \text{Feature\_Extract}(S)
+\end{aligned}
+\label{eq:method-sent-contribution-feature}
+\end{equation}
+其中， \(\textbf{H} \in \mathbb{R}^{d_\text{model} \times n}\) 为句子特征矩阵，\(S = [s_1, s_2, \ldots, s_n]^T\) 为句子列表。接着，计算句子间的注意力权重：
+\begin{equation}
+\begin{aligned}
+    \textbf{W} = \text{Attention}(\textbf{H})
+\end{aligned}
+\label{eq:method-sent-contribution-attention}
+\end{equation}
+\(W \in \mathbb{R}^{n \times n}\) 为句子间的注意力权重矩阵。最后，通过特征矩阵 $\textbf{H}$ 与注意力权重矩阵 $\textbf{W}$ 做矩阵相乘运算后使用线性层降维，计算句子贡献度：
+\begin{equation}
+\begin{aligned}
+    \textbf{g} = \text{Linear}(\textbf{HW})
+\end{aligned}
+\label{eq:method-sent-contribution}
+\end{equation}
+\(\textbf{g} \in \mathbb{R}^{n}\) 为句子贡献度向量。
+
+在接下来的两节中，本文将详细介绍句子贡献度计算模块中的特征提取（公式 \ref{eq:method-sent-contribution-feature}）和句子间注意力权重计算（公式 \ref{eq:method-sent-contribution-attention}）的具体实现。
+
+\subsubsection{特征提取}
+
+特征提取模块使用BGE（Bidirectional Generative Encoder）\cite{bge_embedding}作为基座模型。相比BERT，BGE采用RetroMAE非对称自编码架构，通过编码器-解码器的非对称设计强化语义表征能力。其中编码器（BERT-base）接受15-30\%掩码率的输入，专注于捕捉双向上下文；解码器仅使用单层Transformer 解码层，输入掩码率高达50-70\%，用于对遮掩文本进行重建。在训练过程中的编码阶段，模型对输入文本随机进行15\%-30\%的遮掩，然后通过编码得到对应文本的嵌入向量；而在解码阶段，为了提高任务复杂性，文本噪声被进一步加大（掩码比例增加至50\%-70\%），随后通过双流自注意力机制训练解码器从残缺信息中重建完整文本。相比 BERT 仅关注局部词语预测的架构，这种非对称设计能迫使编码器生成更加强大的嵌入向量，对提升模型的语义理解和表征能力效果显著。单个句子的特征提取三个阶段具体实现如图 \ref{fig:method-feature-extract} 所示。
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.6\textwidth]{figures/feature_extract.jpg}
+    \caption{句子的特征提取}
+    \label{fig:method-feature-extract}
+\end{figure*}
+
+特征提取模块中，单个句子$s_i$的编码主要分为以下三个阶段：
+
+（1）阶段一：输入规范化
+
+\textbf{分词与截断}：采用分词器对句子进行子词切分后，生成对应token序列$[t_{i1}, t_{i2}, ..., t_{ik}]$（假设$s_i$分词后的token序列长度为$k$），然后对该序列执行动态填充（padding）与截断（truncation），确保最大序列长度不超过512。
+
+\textbf{添加特殊标记}：在序列首尾分别添加 \texttt{[CLS]} 和 \texttt{[SEP]}，形成规范化输入序列为 \( (\texttt{[CLS]}, t_{i1}, t_{i2}, \ldots, t_{ik}, \texttt{[SEP]}) \)，其中 \(\texttt{[CLS]} \) 标记的隐藏状态作为全局语义表征将用于后续句子表征向量的生成。
+
+（2）阶段二：层级特征抽取
+
+\textbf{嵌入层映射}：通过三元嵌入组合（Token + Position + Segment）将离散输入映射为 768 维稠密向量。对$s_i$中每个位置 $j$ 的嵌入计算为：
+\begin{equation}
+    \textbf{E}_j = \textbf{E}_{token,j} + \textbf{E}_{pos,j} + \textbf{E}_{seg,j}, \quad j \in [1,k]
+\end{equation}
+其中，$\textbf{E}_{token,j}$ 表示词嵌入，$\textbf{E}_{pos,j}$ 表示绝对位置嵌入，$\textbf{E}_{seg,j}$ 表示段落嵌入。最终得到第 $i$ 个句子的嵌入矩阵$\textbf{E} \in \mathbb{R}^{k \times 768}$ 包含所有位置的联合表示，包括特殊标记\texttt{[CLS]} 和\texttt{[SEP]}。
+
+\textbf{深度编码传播}：通过12层双向Transformer编码器对$s_i$的嵌入进行独立处理，逐步融入更深层次的语义。编码过程中第$l$层输出为：
+\begin{equation}
+    \textbf{H}^{(l)} = \text{LayerNorm}\left(\textbf{H}^{(l-1)} + \text{Attention}(\textbf{H}^{(l-1)})\right)
+\end{equation}
+其中第一层的输入向量$\textbf{H}^0=\textbf{E}$，经过12层编码后最终得到句子$s_i$的上下文感知表示$\textbf{H}^{\text{final}} \in \mathbb{R}^{k \times 768}$。
+
+（3）阶段三：句子向量生成
+
+得到句子的层级特征之后，不同于直接提取首标记隐藏状态作为全局表征的做法，本模型采用混合池化策略提取每个句子的多模式特征以保留原始句子的细粒度语义。
+
+具体来说，对于句子$s_i$，混合池化步骤需要分别计算其[CLS]全局表征$\textbf{h}^\texttt{[CLS]}$（[CLS] 标记池化）、序列有效token部分的平均向量$\textbf{h}^\text{mean}$（均值池化）以及序列有效token部分沿特征维度的最大值$\textbf{h}^\text{max}$（最大池化），具体计算方式如下：
+\begin{equation}
+    \textbf{h}^\texttt{[CLS]} = \textbf{H}^{\text{final}}[0, :] \in \mathbb{R}^{768}
+\end{equation}
+\begin{equation}
+    \textbf{h}^{\text{mean}} = \frac{1}{k} \sum_{j=1}^{k} \textbf{H}^{\text{final}}[j, :]
+\end{equation}
+\begin{equation}
+    \textbf{h}^{\text{max}} = \max_{1 \leq j \leq k} (\textbf{H}^{\text{final}}[j, :])
+\end{equation}
+
+混合池化操作结束后还需要对语义向量与对应的混合池化表征进行投影降维。通过可学习的投影矩阵$\textbf{W}_p$将高维度混合特征映射至目标维度，最终得到单个句子的编码向量。整体计算流程如式\ref{sentence_embedding_generate}所示：
+\begin{equation}\label{sentence_embedding_generate}
+    \textbf{h} = \textbf{W}_p[\textbf{h}^\texttt{[CLS]}; \textbf{h}^{\text{mean}}; \textbf{h}^{\text{max}}] \in \mathbb{R}^d
+\end{equation}
+其中 $\textbf{W}_p \in \mathbb{R}^{d \times d_\text{hidden}}$ 为可学习参数矩阵，$d$ 为输出维度（默认768），$d_\text{hidden}$为投影维度。
+
+\subsubsection{句子间注意力权重计算}
+
+在 Transformer 中，定义注意力函数为输入为查询和一组键值，然后进行输出的函数，在此之中查询（Query, Q）、键（Key, K）、值（Value, V）和输出都是向量。在注意力函数中，简单地讲，输出实质上是值的加权和。此其中对于每个值的权重由权重相应的键以及查询计算得出。
+
+本文中设计的句子间注意力权重计算过程参考了 Transformer 中的注意力机制 \cite{transformer} 并加以修改，其核心思想是通过计算查询与键之间的相似度来确定值的权重。在本文中，句子间注意力权重计算采用了单层基于稀疏掩码缩放点积注意力的多头注意力机制。以下是对这两种机制的详细介绍。
+
+（1） 稀疏掩码缩放点积注意力
+
+在 Transformer 论文中所采用的注意力机制为缩放点积注意力。该机制的输入由查询、键和值组成，其中查询和键的维度均为 \(d_k\)，而值的维度为 \(d_v\)。在句子间注意力权重计算中，输入的查询、键和值都为句子特征矩阵 \(\textbf{H}\)。此外，基于语言学中句子关联性的距离衰减特性（即相邻句子通常具有更强的语义关联），本文在注意力机制中引入了稀疏掩码策略，具体通过设置距离阈值（distance threshold=3）来屏蔽远距离句子间的注意力交互。这种设计实现了两个关键优势：（1）符合文本的局部连贯性原理；（2）显著降低了长文档处理时的计算复杂度。
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale = 0.4]{figures/DotAtt}
+	\caption{稀疏掩码缩放点积注意力}
+	\label{fig:DotAtt}
+\end{figure}
+
+在本文应用的稀疏掩码缩放点积注意力中，首先将句子特征矩阵 \( \textbf{H} \) 通过三个各不相同的线性层，再计算两个句子特征矩阵的乘积，并随后将矩阵乘法的结果除以系数 \(\sqrt{d_k}\)。再使用稀疏掩码遮掩距离过远的句子之间的注意力，接着，通过 softmax 函数后再与句子特征矩阵 \( \textbf{H} \) 做矩阵乘法，求出单次稀疏掩码缩放点积注意力。具体的过程如图 \ref{fig:DotAtt} 所示。
+
+稀疏掩码缩放点积注意力函数的输出可以表示为：
+\begin{equation}
+\text{Attention}_\text{sparse}(\textbf{H}) = \text{SoftMax} \left( \frac{(\textbf{HW}^Q)(\textbf{HW}^K)^T}{\sqrt{d_k}} \odot \textbf{M} \right) (\textbf{HW}^V)
+\label{eq3.1}
+\end{equation}
+其中，\(\textbf{M}\) 为稀疏掩码矩阵，\(\odot\) 表示遮蔽掩码操作。\(\textbf{W}^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(\textbf{W}^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 分别为图 \ref{fig:DotAtt} 中线性层 Q、线性层 K 和线性层 V 的权重矩阵。
+
+（2） 多头注意力
+
+本文为防止可能产生的模型性能下降问题，因此没有将键、值和查询的维度统一设定为 \(d_{\text{model}}\) 。在线性层中将查询、键和值分别投影为 \(d_k\)、\(d_k\) 和 \(d_v\) 维度。在此基础上，经过一系列操作生成 \(d_v\) 维的输出值。随后，将这些 \(d_v\) 维的输出值进行连接，并再次进行线性投影，以生成最终输出。具体过程如图 \ref{fig:MultiheadAtt} 所示。
+
+\begin{figure}[htbp]
+	\centering
+	\includegraphics[scale = 0.4]{figures/MultiheadAtt}
+	\caption{多头注意力 \cite{transformer}}
+	\label{fig:MultiheadAtt}
+\end{figure}
+
+相较于单注意力头会导致信息的平均化，不同位置的信息可以被多头注意力同时关注。多头注意力机制的输出可以表示为：
+\begin{equation}
+\textbf{W} = \text{Attention}(\textbf{H}) = \text{Concat} \left(\text{Attention}_\text{sparse-1}(\textbf{H}), ..., \text{Attention}_\text{sparse-h}(\textbf{H}) \right)W^O
+\label{eq3.2}
+\end{equation}
+在上述公式中，投影操作涉及的参数矩阵包括 \(W^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(W^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(W^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 以及 \(W^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}\)。
+
+在句子间注意力权重计算中，本文采用了 \(h = 8\) 个注意力头。\(d_k = d_v = d_{\text{model}} / h = 64\) 的维度赋予给了每一个注意力头。注意到，由于 \(d_k, d_v, d_{\text{model}} \) 被放缩，因此整体计算成本与具有全维度的单头注意力等价。
+
+\subsection{句子检测}
+
+句子检测模块旨在对单个句子的来源进行判断，具体框架如图\ref{fig:sentence-classifier}所示，主要包含三个组成部分，分别是：词嵌入层，特征提取器，以及分类器。
+
+\begin{figure*}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{figures/sentence-classifier.png}
+    \caption{句子检测模块框架图}
+    \label{fig:sentence-classifier}
+\end{figure*}
+
+给定一个待检测句子$S$，首先利用分词器对其进行词元化处理，表示为由$n$个词元$t_{i}$顺序排列组成的序列$[t_{1}, t_{2}, \ldots, t_{n}]$。本文采用的是DeBERTa-V3-Large对应的分词器，它会在每个序列前面自动添加一个$[\mathrm{CLS}]$词元，用于整合整个序列语义，因此处理后的句子$S=[t_{0}, t_{1}, t_{2}, \ldots, t_{n}]$, $t_{0}$对应$[\mathrm{CLS}]$词元。
+
+将待检测句子$S$处理完毕后，利用句子检测模块对其进行检测。首先将其输入到词嵌入层$\mathrm{Embedding}(\cdot)$，将离散的词元转变为稠密的向量表示，便于后续利用神经网络进行特征提取，得到每个词元$t_{i}$对应的词嵌入表示$\mathbf{e}_{i}$：
+\begin{equation}
+    [\mathbf{e}_{0}, \mathbf{e}_{1}, \ldots, \mathbf{e}_{n}]=\mathrm{Embedding}([t_{0}, t_{1}, \ldots, t_{n}])
+\end{equation}
+
+为了挖掘句子的深层语义特征，利用预训练DeBERTa-V3-Large模型作为特征提取器，对句子进行特征表征，得到每个词元对应的隐层表征向量$\mathbf{h}_{i}$：
+\begin{equation}
+    [\mathbf{h}_{0}, \mathbf{h}_{1}, \ldots, \mathbf{h}_{n}]=\mathrm{DeBERTa}([\mathbf{e}_{0}, \mathbf{e}_{1}, \ldots, \mathbf{e}_{n}])
+\end{equation}
+
+由于在DeBERTa-V3-Large模型预训练过程中，$[\mathrm{CLS}]$词元用于整合句子的全局语义信息，以往研究常常将其对应的隐层表征向量$\mathbf{h}_{0}$当做句子全局特征，用于下游的分类任务。本文沿用该方式，将$[\mathrm{CLS}]$词元对应的隐层向量$\mathbf{h}_{0}$作为特征传入分类器，对句子进行检测。分类器由线性层$\mathrm{Linear}(\cdot)$和$\mathrm{SoftMax}(\cdot)$组成：
+\begin{equation}
+    \mathbf{p}=\mathrm{SoftMax}(\mathrm{Linear}(\mathbf{h}_{0}))
+\end{equation}
+其中，$\mathbf{p}$为模型的预测概率分布。
+
+训练阶段，模型采用交叉熵损失函数来计算模型预测结果和实际标签之间的差异。利用句子级检测数据对本模块进行调优，能够有效捕捉文本中的细微差异和潜在模式，实现准确和可靠的句子级检测，为后续文档级文本检测提供坚实基础。在后续的模型设计中，该模块所有参数被冻结，不再参与整体模型参数的更新，从而节约计算成本。即便如此，模型整体性能并未受到过多影响，仍能实现较高的文档级检测准确率。
+
 \section{实验}
 \label{sec:method-experiment}
 
-我们设计了如下实验，基于在第 \ref{chap:TOSWT} 章中介绍的模型改写文本检测数据集微调 \ref{sec:method-pretrain-roberta} 节中提及的 RoBERTa-Base 和 RoBERTa-Large 以及在 \ref{sec:method-pretrain-deberta} 节中提及的 DeBERTa-V3-Base 和 DeBERTa-V3-Large 模型。微调后再调用模型在测试集上输出预测标签，最后使用四种指标准确率（Accuracy）、精确率（Precision）、召回率（Recall）和 F1 分数评估预测标签的水准，进而评定微调后的模型能力。
+本文设计了如下实验，基于在第 \ref{chap:TOSWT} 章中介绍的模型改写文本检测数据集微调 \ref{sec:method-pretrain-roberta} 节中提及的 RoBERTa-Base 和 RoBERTa-Large 以及在 \ref{sec:method-pretrain-deberta} 节中提及的 DeBERTa-V3-Base 和 DeBERTa-V3-Large 模型。以及在文档级微调实验中，使用 \ref{sec:method-sent2arti} 中提及的基于句子级文本检测技术的文档级文本检测方法四种方法。微调后再调用模型在测试集上输出预测标签，最后使用四种指标准确率（Accuracy）、精确率（Precision）、召回率（Recall）和 F1 分数评估预测标签的水准，进而评定微调后的模型能力。
 
 为满足细粒度的数据要求，分别使用文档级别和句子级别的数据分别微调上文提及的四个模型。这些预训练模型参数来源 URL 如表 \ref{tab:method-pretrain_model_url} 所示。
 
@@ -44,7 +233,7 @@
 \caption{预训练模型参数来源 URL} \label{tab:method-pretrain_model_url}
 \begin{tabular}{ll}
 \toprule
-\textbf{模型}      & \textbf{URL}                                                                 \\ \midrule
+\textbf{模型}      & \textbf{来源 URL}                                                                 \\ \midrule
 RoBERTa-Base \cite{liu_roberta_2019}     & https://huggingface.co/FacebookAI/roberta-base    \\
 RoBERTa-Large \cite{liu_roberta_2019}   & https://huggingface.co/FacebookAI/roberta-large   \\
 DeBERTa-V3-Base \cite{he2023debertav3improvingdebertausing}  & https://huggingface.co/microsoft/deberta-v3-base  \\
@@ -192,7 +381,8 @@ CUDA   版本   & 12.6                 \\ \bottomrule
 \multirow{4}{*}{句子级}    & RoBERTa-Base \cite{liu_roberta_2019}     & 16                  & $10^{-5}$                & 0.01                  \\
                           & RoBERTa-Large \cite{liu_roberta_2019}    & 16                  & $10^{-6}$               & 0.0001                \\
                           & DeBERTa-V3-Base \cite{he2023debertav3improvingdebertausing}  & 16                  & $10^{-5}$                & 0.01                  \\
-                          & DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & 4                   & $10^{-6}$               & 0.001                 \\ \bottomrule
+                          & DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & 4                   & $10^{-6}$               & 0.001                 \\ \midrule
+句子级推测文档级 & 句子深度贡献度加权 & 8 & $10^{-6}$ & 0.001 \\ \bottomrule
 \end{tabular}
 \end{table*}
 
@@ -343,7 +533,11 @@ F1分数是机器学习中评估分类模型性能的关键指标，它通过调
 RoBERTa-Base \cite{liu_roberta_2019}  & 72.88          & 77.26          & 72.89          & 72.73          \\
 RoBERTa-Large \cite{liu_roberta_2019} & 80.92          & 81.84          & 80.92          & 80.55          \\
 DeBERTa-V3-Base \cite{he2023debertav3improvingdebertausing} & 79.85          & 81.44          & 79.85          & 79.81          \\
-DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & \textbf{85.97} & \textbf{86.31} & \textbf{85.96} & \textbf{85.84} \\ \bottomrule
+DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & \textbf{85.97} & \textbf{86.31} & \textbf{85.96} & \textbf{85.84} \\ \midrule
+DeBERTa-V3-Large\cite{he2023debertav3improvingdebertausing}(Sentence)  & 78.11 & 80.63 & 78.11 & 77.87 \\
+朴素加权 & 76.27 & 81.19 & 76.27 & 76.02 \\
+长度加权 & 77.85 & 81.18 & 77.85 & 77.65 \\
+句子深度贡献度加权 & \uline{78.26} & \uline{81.86} & \uline{78.26} & \uline{78.09} \\ \bottomrule
 \end{tabular}
 \label{tab:document}
 \end{table*}
@@ -357,6 +551,8 @@ DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & \textbf{85.97} & 
 特别值得注意的是各模型在精准率和召回率之间的平衡关系。所有模型的精准率都略高于召回率，这种系统性差异可能反映了当前预训练语言模型在文档级任务中普遍存在的保守预测倾向。RoBERTa-Base的精准率（77.26\%）比召回率（72.89\%）高出4.37个百分点，这一差距在更大规模的模型中有所缩小，DeBERTa-V3-Large的精准率（86.31\%）仅比召回率（85.96\%）高出0.35个百分点。这表明随着模型规模和架构的优化，模型在保持高精确性的同时，也能更好地覆盖正类样本，实现更均衡的性能表现。
 
 F1分数的变化趋势进一步验证了上述发现。作为精准率和召回率的调和平均数，F1分数综合反映了模型的整体分类性能。DeBERTa-V3-Large的F1分数达到85.84\%，比RoBERTa-Large的80.55\%高出5.29个百分点，这一提升幅度超过了准确率的提升（5.05个百分点），说明DeBERTa的优势在综合考虑精确性和全面性时更为明显。
+
+在句子特征融合策略的比较中，本文提出的句子深度注意力机制以78.26\%的准确率表现最佳，比朴素加权方法提高了 1.99 个百分点，同时对比直接将文本输入句子级检测模型，完成了其指标的全面提升。长度加权方法也取得了不错的效果，F1值达到 77.65\%，说明文本长度这一特征确实能带来性能提升。然而，所有句子级特征融合策略的表现都明显低于完整文档级建模的DeBERTa-V3-Large模型，这突显了文档级整体建模的重要性。
 
 从实际应用的角度来看，这些结果对模型选择具有重要指导意义。在计算资源允许的情况下，DeBERTa-V3-Large显然是首选方案；在资源受限时，DeBERTa-V3-Base能以较小的参数量达到与RoBERTa-Large相当的性能，是更经济高效的选择。此外，精准率普遍高于召回率的现象提示我们，在这些模型的工业部署中可能需要根据具体应用场景的需求，通过调整分类阈值来优化精确性或召回率。
 
@@ -403,7 +599,7 @@ DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & \textbf{49.61} & 
 
 本章系统地研究了基于预训练语言模型的文本改写检测方法，通过对比实验和消融分析，深入探讨了不同模型架构在文档级和句子级文本检测任务中的表现差异。主要研究内容和结论总结如下：
 
-在模型架构方面，本章详细分析了 RoBERTa 和 DeBERTa 系列模型的技术特点。实验结果表明，DeBERTa-V3-Large 在文档级任务中表现最优，准确率达到 85.97\%，显著优于其他对比模型。这验证了其解耦注意力机制和增强掩码解码器在处理长文本依赖关系时的优势。值得注意的是，DeBERTa-V3-Base 以较小的模型规模达到了接近 RoBERTa-Large 的性能水平，体现了架构创新的重要性。
+在模型架构方面，本章详细分析了 RoBERTa 和 DeBERTa 系列模型的技术特点。实验结果表明，DeBERTa-V3-Large 在文档级任务中表现最优，准确率达到 85.97\%，显著优于其他对比模型。这验证了其解耦注意力机制和增强掩码解码器在处理长文本依赖关系时的优势。值得注意的是，DeBERTa-V3-Base 以较小的模型规模达到了接近 RoBERTa-Large 的性能水平，体现了架构创新的重要性。除此之外，提出了一种基于句子级文本检测技术的文档级文本检测方法，采用了句子深度贡献度加权来融合句子级特征，取得了较好的效果。这一方法在文档级任务中表现出色，准确率达到 78.26\%，为后续研究提供了新的思路。
 
 在任务粒度方面，研究发现文档级和句子级任务呈现出不同的性能特征。所有模型在文档级任务上的表现明显优于句子级任务，这反映了丰富的上下文信息对模型性能的积极影响。特别地，在句子级任务中，模型规模扩大带来的性能提升相对有限，而架构差异的影响更为显著，这为不同应用场景下的模型选择提供了重要参考。
 
