@@ -106,7 +106,7 @@
 
 （1）阶段一：输入规范化
 
-\textbf{分词与截断}：采用分词器对句子进行子词切分后，生成对应token序列$[t_{i1}, t_{i2}, ..., t_{ik}]$（假设$s_i$分词后的token序列长度为$k$），然后对该序列执行动态填充（padding）与截断（truncation），确保最大序列长度不超过512。
+\textbf{分词与截断}：采用分词器对句子进行词切分后，生成对应token序列$[t_{i1}, t_{i2}, ..., t_{ik}]$（假设$s_i$分词后的token序列长度为$k$），然后对该序列执行动态填充（padding）与截断（truncation），确保最大序列长度不超过512。
 
 \textbf{添加特殊标记}：在序列首尾分别添加 \texttt{[CLS]} 和 \texttt{[SEP]}，形成规范化输入序列为 \( (\texttt{[CLS]}, t_{i1}, t_{i2}, \ldots, t_{ik}, \texttt{[SEP]}) \)，其中 \(\texttt{[CLS]} \) 标记的隐藏状态作为全局语义表征将用于后续句子表征向量的生成。
 
@@ -120,7 +120,7 @@
 
 \textbf{深度编码传播}：通过12层双向Transformer编码器对$s_i$的嵌入进行独立处理，逐步融入更深层次的语义。编码过程中第$l$层输出为：
 \begin{equation}
-    \textbf{H}^{(l)} = \text{LayerNorm}\left(\textbf{H}^{(l-1)} + \text{Attention}(\textbf{H}^{(l-1)})\right)
+    \textbf{H}^{(l)} = \text{LayerNorm}\left(\textbf{H}^{(l-1)} + \text{Attention}_\text{Transformer}(\textbf{H}^{(l-1)})\right)
 \end{equation}
 其中第一层的输入向量$\textbf{H}^0=\textbf{E}$，经过12层编码后最终得到句子$s_i$的上下文感知表示$\textbf{H}^{\text{final}} \in \mathbb{R}^{k \times 768}$。
 
@@ -128,7 +128,7 @@
 
 得到句子的层级特征之后，不同于直接提取首标记隐藏状态作为全局表征的做法，本模型采用混合池化策略提取每个句子的多模式特征以保留原始句子的细粒度语义。
 
-具体来说，对于句子$s_i$，混合池化步骤需要分别计算其[CLS]全局表征$\textbf{h}^\texttt{[CLS]}$（[CLS] 标记池化）、序列有效token部分的平均向量$\textbf{h}^\text{mean}$（均值池化）以及序列有效token部分沿特征维度的最大值$\textbf{h}^\text{max}$（最大池化），具体计算方式如下：
+具体来说，对于句子$s_i$，混合池化步骤需要分别计算其 $\texttt{[CLS]}$ 全局表征$\textbf{h}^\texttt{[CLS]}$（$\texttt{[CLS]}$ 标记池化）、序列有效token部分的平均向量$\textbf{h}^\text{mean}$（均值池化）以及序列有效token部分沿特征维度的最大值$\textbf{h}^\text{max}$（最大池化），具体计算方式如下：
 \begin{equation}
     \textbf{h}^\texttt{[CLS]} = \textbf{H}^{\text{final}}[0, :] \in \mathbb{R}^{768}
 \end{equation}
@@ -169,7 +169,7 @@
 \text{Attention}_\text{sparse}(\textbf{H}) = \text{SoftMax} \left( \frac{(\textbf{HW}^Q)(\textbf{HW}^K)^T}{\sqrt{d_k}} \odot \textbf{M} \right) (\textbf{HW}^V)
 \label{eq3.1}
 \end{equation}
-其中，\(\textbf{M}\) 为稀疏掩码矩阵，\(\odot\) 表示遮蔽掩码操作。\(\textbf{W}^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(\textbf{W}^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 分别为图 \ref{fig:DotAtt} 中线性层 Q、线性层 K 和线性层 V 的权重矩阵。
+其中，\(\textbf{M}\) 为稀疏掩码矩阵，\(\odot\) 表示遮蔽掩码操作。\(\textbf{W}^Q \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 分别为图 \ref{fig:DotAtt} 中线性层 Q、线性层 K 和线性层 V 的权重矩阵。
 
 （2） 多头注意力
 
@@ -187,7 +187,7 @@
 \textbf{W} = \text{Attention}(\textbf{H}) = \text{Concat} \left(\text{Attention}_\text{sparse-1}(\textbf{H}), ..., \text{Attention}_\text{sparse-h}(\textbf{H}) \right)W^O
 \label{eq3.2}
 \end{equation}
-在上述公式中，投影操作涉及的参数矩阵包括 \(W^Q \in \mathbb{R}^{d_{\text{model}}}\)、\(W^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(W^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 以及 \(W^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}\)。
+在上述公式中，投影操作涉及的参数矩阵包括 \(\textbf{W}^Q \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^K \in \mathbb{R}^{d_{\text{model}} \times d_k}\)、\(\textbf{W}^V \in \mathbb{R}^{d_{\text{model}} \times d_v}\) 以及 \(\textbf{W}^O \in \mathbb{R}^{hd_v \times d_{\text{model}}}\)。
 
 在句子间注意力权重计算中，本文采用了 \(h = 8\) 个注意力头。\(d_k = d_v = d_{\text{model}} / h = 64\) 的维度赋予给了每一个注意力头。注意到，由于 \(d_k, d_v, d_{\text{model}} \) 被放缩，因此整体计算成本与具有全维度的单头注意力等价。
 
@@ -235,10 +235,11 @@
 \begin{tabular}{ll}
 \toprule
 \textbf{模型}      & \textbf{来源 URL}                                                                 \\ \midrule
-RoBERTa-Base \cite{liu_roberta_2019}     & https://huggingface.co/FacebookAI/roberta-base    \\
-RoBERTa-Large \cite{liu_roberta_2019}   & https://huggingface.co/FacebookAI/roberta-large   \\
-DeBERTa-V3-Base \cite{he2023debertav3improvingdebertausing}  & https://huggingface.co/microsoft/deberta-v3-base  \\
-DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & https://huggingface.co/microsoft/deberta-v3-large \\ \bottomrule
+bge-base-en-v1.5 \cite{bge_embedding} & \url{https://huggingface.co/BAAI/bge-base-en-v1.5} \\ 
+RoBERTa-Base \cite{liu_roberta_2019}     & \url{https://huggingface.co/FacebookAI/roberta-base}    \\
+RoBERTa-Large \cite{liu_roberta_2019}   & \url{https://huggingface.co/FacebookAI/roberta-large}   \\
+DeBERTa-V3-Base \cite{he2023debertav3improvingdebertausing}  & \url{https://huggingface.co/microsoft/deberta-v3-base}  \\
+DeBERTa-V3-Large \cite{he2023debertav3improvingdebertausing} & \url{https://huggingface.co/microsoft/deberta-v3-large} \\ \bottomrule
 \end{tabular}
 \end{table*}
 

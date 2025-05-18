@@ -28,8 +28,8 @@
   % - 如果想要按照引用顺序排序，可以开启 `publications/sorting` 选项。
   % - 如果想要微调，详见 https://bithesis.bitnp.net/faq/bib-sort.html#sortkey 。
   % 更多信息请参考「bithesis.pdf」手册。
-  % \addpubs{DBLP:journals/apin/YinLLSL24}
-  % \addpubs{TOSWT}
+  \addpubs{DBLP:journals/apin/YinLLSL24}
+  \addpubs{TOSWT}
 
   % 主要针对硕士生
   \printbibliography[heading=none,category=mypub,resetnumbers=true]
@@ -54,12 +54,12 @@
   % 如果想绕过 pub.bib 直接记录项目（例如获奖），请参考以下内容，
   % 定义一个能和 \printbibliography 共存的列表。
   % https://bithesis.bitnp.net/faq/pub-manual.html
-  \zihao{5} % 字号改为五号
-  \renewcommand{\labelenumi}{[\theenumi]} % 编号改用中括号
+  % \zihao{5} % 字号改为五号
+  % \renewcommand{\labelenumi}{[\theenumi]} % 编号改用中括号
   
-  \begin{enumerate}[nosep, leftmargin=4ex-2pt, labelsep=1ex]
-    \setcounter{enumi}{1} % 下一项为 5。
-    \item ***[J]. Applied Intelligence, 2024, 54(7): 5891-5906.
-    \item ***[C]. Proceedings of the 2025 13th International Conference on Information and Education Technology. 2025.
-  \end{enumerate}
+  % \begin{enumerate}[nosep, leftmargin=4ex-2pt, labelsep=1ex]
+  %   \setcounter{enumi}{1} % 下一项为 5。
+  %   \item ***[J]. Applied Intelligence, 2024, 54(7): 5891-5906.
+  %   \item ***[C]. Proceedings of the 2025 13th International Conference on Information and Education Technology. 2025.
+  % \end{enumerate}
 \end{publications}
