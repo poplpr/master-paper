@@ -308,7 +308,7 @@ DeBERTa 采用了一种高效的实现方法。在其之前的研究中，对于
 \label{fig:emd}
 \end{figure*}
 
-将绝对位置信息整合到模型中可以通过两种主要方式实现。BERT 模型选择在输入层直接引入绝对位置信息。相较之下，DeBERTa 结构则在所有 Transformer 层之后、但在基于聚合的上下文词内容和位置嵌入解码掩码词的 Softmax 层之前，添加绝对位置信息，如图 \ref{fig:emd} 所示。这种创新架构使DeBERTa具备双重优势：一方面在全部Transformer层级中精准建模相对位置关系，另一方面在重构遮蔽标记时巧妙融合绝对位置特征作为辅助信号。正是基于这一独特机制，该模型将其核心解码模块命名为"增强型掩码解码器"（Enhanced Mask Decoder, EMD）。
+将绝对位置信息整合到模型中可以通过两种主要方式实现。BERT 模型选择在输入层直接引入绝对位置信息。相较之下，DeBERTa 结构则在所有 Transformer 层之后、但在基于聚合的上下文词内容和位置嵌入解码掩码词的 Softmax 层之前，添加绝对位置信息，如图 \ref{fig:emd} 所示。这种创新架构使DeBERTa具备双重优势：一方面在全部Transformer层级中精准建模相对位置关系，另一方面在重构遮蔽标记时巧妙融合绝对位置特征作为辅助信号。正是基于这一独特机制，该模型将其核心解码模块命名为“增强型掩码解码器”（Enhanced Mask Decoder, EMD）。
 
 \subsubsection{DeBERTa V3 模型}
 
